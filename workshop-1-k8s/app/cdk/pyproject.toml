@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "EKSmonolith"
+version = "0.1.0"
+description = ""
+authors = ["Sev <sev@amazon.com>"]
+
+
+
+
+[tool.poetry.dependencies]
+python = "^3.7"
+aws-cdk-aws-ecr = "^1.42.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
