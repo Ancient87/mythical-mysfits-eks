@@ -1,11 +1,488 @@
 {
   "Resources": {
+    "mythicaltable33D867A5": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "KeySchema": [
+          {
+            "AttributeName": "MysfitId",
+            "KeyType": "HASH"
+          }
+        ],
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "MysfitId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "LawChaos",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "GoodEvil",
+            "AttributeType": "S"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "LawChaosIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "LawChaos",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "MysfitId",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 5,
+              "WriteCapacityUnits": 5
+            }
+          },
+          {
+            "IndexName": "GoodEvilIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "GoodEvil",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "MysfitId",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 5,
+              "WriteCapacityUnits": 5
+            }
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/mythical_table/Resource"
+      }
+    },
     "mythicalbucket00734ECC": {
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Delete",
       "DeletionPolicy": "Delete",
       "Metadata": {
         "aws:cdk:path": "mythicalstack/mythical_bucket/Resource"
+      }
+    },
+    "mythicalbucketPolicy9B34B6A0": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "mythicalbucket00734ECC"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "CanonicalUser": {
+                  "Fn::GetAtt": [
+                    "spaoaiBA4BFFA6",
+                    "S3CanonicalUserId"
+                  ]
+                }
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "mythicalbucket00734ECC",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "mythicalbucket00734ECC",
+                          "Arn"
+                        ]
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/mythical_bucket/Policy/Resource"
+      }
+    },
+    "spaoaiBA4BFFA6": {
+      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+      "Properties": {
+        "CloudFrontOriginAccessIdentityConfig": {
+          "Comment": "SPA CF OAI"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/spaoai/Resource"
+      }
+    },
+    "distCFDistribution81D946B7": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "CustomErrorResponses": [
+            {
+              "ErrorCachingMinTTL": 0,
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            },
+            {
+              "ErrorCachingMinTTL": 0,
+              "ErrorCode": 403,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "CachedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "Compress": true,
+            "ForwardedValues": {
+              "Cookies": {
+                "Forward": "none"
+              },
+              "QueryString": false
+            },
+            "TargetOriginId": "origin1",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Origins": [
+            {
+              "ConnectionAttempts": 3,
+              "ConnectionTimeout": 10,
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "mythicalbucket00734ECC",
+                  "RegionalDomainName"
+                ]
+              },
+              "Id": "origin1",
+              "S3OriginConfig": {
+                "OriginAccessIdentity": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "origin-access-identity/cloudfront/",
+                      {
+                        "Ref": "spaoaiBA4BFFA6"
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "PriceClass": "PriceClass_100",
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate": true
+          }
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/dist/CFDistribution"
+      }
+    },
+    "spadeployCustomResourceDA89A796": {
+      "Type": "Custom::CDKBucketDeployment",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+            "Arn"
+          ]
+        },
+        "SourceBucketNames": [
+          {
+            "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781"
+          }
+        ],
+        "SourceObjectKeys": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::Split": [
+                        "||",
+                        {
+                          "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3VersionKey0AF52FFE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Fn::Select": [
+                    1,
+                    {
+                      "Fn::Split": [
+                        "||",
+                        {
+                          "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3VersionKey0AF52FFE"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "DestinationBucketName": {
+          "Ref": "mythicalbucket00734ECC"
+        },
+        "Prune": true,
+        "DistributionId": {
+          "Ref": "distCFDistribution81D946B7"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/spadeploy/CustomResource/Default"
+      }
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource"
+      }
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject*",
+                "s3:Abort*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "mythicalbucket00734ECC",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "mythicalbucket00734ECC",
+                          "Arn"
+                        ]
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "cloudfront:GetInvalidation",
+                "cloudfront:CreateInvalidation"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "Roles": [
+          {
+            "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3BucketB6159468"
+          },
+          "S3Key": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::Split": [
+                        "||",
+                        {
+                          "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3VersionKey2060CAC0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Fn::Select": [
+                    1,
+                    {
+                      "Fn::Split": [
+                        "||",
+                        {
+                          "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3VersionKey2060CAC0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.6",
+        "Timeout": 900
+      },
+      "DependsOn": [
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource",
+        "aws:asset:path": "asset.4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50.zip",
+        "aws:asset:property": "Code"
       }
     },
     "mythicalclustervpcA66C39BA": {
@@ -1632,8 +2109,8 @@
         ],
         "ForceUpdateEnabled": true,
         "ScalingConfig": {
-          "DesiredSize": 3,
-          "MaxSize": 3,
+          "DesiredSize": 2,
+          "MaxSize": 2,
           "MinSize": 1
         }
       },
@@ -1659,6 +2136,25 @@
     }
   },
   "Outputs": {
+    "mythicaltableoutput": {
+      "Value": {
+        "Ref": "mythicaltable33D867A5"
+      },
+      "Export": {
+        "Name": "MythicalTable"
+      }
+    },
+    "mythicalbucketwebsite": {
+      "Value": {
+        "Fn::GetAtt": [
+          "distCFDistribution81D946B7",
+          "DomainName"
+        ]
+      },
+      "Export": {
+        "Name": "S3WebsiteURL"
+      }
+    },
     "mythicaleksclusterConfigCommand8881EF53": {
       "Value": {
         "Fn::Join": [
@@ -1815,6 +2311,30 @@
     }
   },
   "Parameters": {
+    "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3BucketB6159468": {
+      "Type": "String",
+      "Description": "S3 bucket for asset \"4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50\""
+    },
+    "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3VersionKey2060CAC0": {
+      "Type": "String",
+      "Description": "S3 key for asset version \"4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50\""
+    },
+    "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50ArtifactHash846130E4": {
+      "Type": "String",
+      "Description": "Artifact hash for asset \"4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50\""
+    },
+    "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781": {
+      "Type": "String",
+      "Description": "S3 bucket for asset \"38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95\""
+    },
+    "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3VersionKey0AF52FFE": {
+      "Type": "String",
+      "Description": "S3 key for asset version \"38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95\""
+    },
+    "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95ArtifactHash26F61CC5": {
+      "Type": "String",
+      "Description": "Artifact hash for asset \"38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95\""
+    },
     "AssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3Bucket2C6BE99F": {
       "Type": "String",
       "Description": "S3 bucket for asset \"fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796\""

@@ -10,6 +10,8 @@ from aws_cdk import (
     aws_cloud9 as cloud9,
     aws_s3 as s3,
     aws_dynamodb as ddb,
+    aws_s3_deployment as s3d,
+    aws_cloudfront as cloudfront,
 )
 import boto3
 
@@ -54,13 +56,118 @@ class MythicalStack(core.Stack):
         ######## Dynamodb #######
         
         
+        mythical_table = ddb.Table(
+            self,
+            "mythical_table",
+            partition_key=ddb.Attribute(
+                name="MysfitId",
+                type=ddb.AttributeType.STRING,
+            )
+        )
+        
+        mythical_table.add_global_secondary_index(
+            index_name="LawChaosIndex",
+            partition_key=ddb.Attribute(
+                name="LawChaos",
+                type=ddb.AttributeType.STRING,
+            ),
+            sort_key=ddb.Attribute(
+                name="MysfitId",
+                type=ddb.AttributeType.STRING,
+            ),
+            
+        )
+        
+        mythical_table.add_global_secondary_index(
+            index_name="GoodEvilIndex",
+            partition_key=ddb.Attribute(
+                name="GoodEvil",
+                type=ddb.AttributeType.STRING,
+            ),
+            sort_key=ddb.Attribute(
+                name="MysfitId",
+                type=ddb.AttributeType.STRING,
+            ),
+            
+        )
+        
+        output_ddb = core.CfnOutput(
+            self,
+            "mythical_table_output",
+            export_name="MythicalTable",
+            value=mythical_table.table_name,
+        )
         
         ######## S3 #######
+        
+        
+        
         
         mythical_bucket = s3.Bucket(
             self,
             "mythical_bucket",
             removal_policy=core.RemovalPolicy.DESTROY,
+        )
+        
+        
+
+        distribution = cloudfront.CloudFrontWebDistribution(
+            self,
+            "dist",
+            origin_configs=[
+                cloudfront.SourceConfiguration(
+                    behaviors=[cloudfront.Behavior(is_default_behavior=True)],
+                    s3_origin_source=cloudfront.S3OriginConfig(
+                      s3_bucket_source=mythical_bucket,
+                      origin_access_identity=cloudfront.OriginAccessIdentity(
+                        self,
+                        "spaoai",
+                        comment="SPA CF OAI",
+                      ),
+                    ),
+                )
+            ],
+            error_configurations=[
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 404,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 403,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+            ],
+        )
+        
+        spa_source = s3d.Source.asset(
+          path = "../web",
+          #path="../frontend/",
+          #bundling=core.BundlingOptions(
+          #  image=core.BundlingDockerImage.from_registry("bayesimpact/react-base"),
+          #  command=["make", "build-prod-cloud"],
+          #  user="root",
+          #),
+        )
+      
+        self.spa_deployment = s3d.BucketDeployment(
+          self,
+          "spadeploy",
+          destination_bucket=mythical_bucket,
+          sources=[spa_source],
+          distribution=distribution,
+          #server_side_encryption=s3d.ServerSideEncryption.AWS_KMS,
+          #server_side_encryption_aws_kms_key_id=self.bucket_key.key_id,
+        )
+        
+        output_bucket = core.CfnOutput(
+            self,
+            "mythical_bucket_website",
+            export_name="S3WebsiteURL",
+            value=distribution.domain_name,
         )
         
         ######## VPC ########
@@ -194,6 +301,7 @@ MythicalStack(
     app,
     "mythicalstack",
     env=env,
+    stack_name="mythicalstack",
     #role_arn=role_arn,
 )
 
