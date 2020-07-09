@@ -9,6 +9,7 @@ from collections import defaultdict
 # DynamoDB, so no credentials need to be stored/managed at all by our code!
 client = boto3.client('dynamodb')
 table_name = os.environ['DDB_TABLE_NAME']
+#print("table_name {0}".format(table_name))
 
 def getAllMysfits():
 

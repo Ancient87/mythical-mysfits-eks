@@ -97,6 +97,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
     ```
     $ script/setup
+    $ source .environ
     ```
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
