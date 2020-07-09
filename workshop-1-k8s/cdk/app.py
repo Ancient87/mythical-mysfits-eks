@@ -170,6 +170,13 @@ class MythicalStack(core.Stack):
             value=distribution.domain_name,
         )
         
+        output_cf = core.CfnOutput(
+            self,
+            "mythical_distribution",
+            export_name="mythicaldistributionoutput",
+            value=distribution.distribution_id,
+        )
+        
         output_bucket = core.CfnOutput(
             self,
             "mythical_bucket_output",

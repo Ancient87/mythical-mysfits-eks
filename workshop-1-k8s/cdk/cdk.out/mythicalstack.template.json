@@ -1896,6 +1896,14 @@
         "Name": "S3WebsiteURL"
       }
     },
+    "mythicaldistribution": {
+      "Value": {
+        "Ref": "distCFDistribution81D946B7"
+      },
+      "Export": {
+        "Name": "mythicaldistributionoutput"
+      }
+    },
     "mythicalbucketoutput": {
       "Value": {
         "Ref": "mythicalbucket00734ECC"

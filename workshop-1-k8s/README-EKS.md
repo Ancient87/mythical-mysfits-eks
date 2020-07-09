@@ -101,16 +101,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
 
-5. Setup environment variables to make your life easier later (use values        shown in the outputs of your CloudFormation stack)
-
-    ```
-    export ECR_MONOLITH=[Outputs:mythicalstack.monolithrepository]
-    export ECR_LIKE=[Outputs:mythicalstack.likerepository]
-    export DDB_TABLE_NAME=[Outputs:mythicalstack.ddbtablename]
-    ```
-    
-
-6. Login to your container repository
+5. Login to your container repository
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
@@ -333,7 +324,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Use the [docker run](https://docs.docker.com/engine/reference/run/) command to run your image; the -p flag is used to map the host listening port to the container listening port.
 
     <pre>
-    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=$TABLE_NAME monolith-service
+    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION -e DDB_TABLE_NAME=$DDB_TABLE_NAME monolith-service
     </pre>
 
     *Note: You can find your DynamoDB table name in the file `workshop-1/cfn-output.json` derived from the outputs of the CloudFormation stack.*

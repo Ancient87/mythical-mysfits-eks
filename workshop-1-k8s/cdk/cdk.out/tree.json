@@ -286,6 +286,10 @@
             "id": "mythical_bucket_website",
             "path": "mythicalstack/mythical_bucket_website"
           },
+          "mythical_distribution": {
+            "id": "mythical_distribution",
+            "path": "mythicalstack/mythical_distribution"
+          },
           "mythical_bucket_output": {
             "id": "mythical_bucket_output",
             "path": "mythicalstack/mythical_bucket_output"

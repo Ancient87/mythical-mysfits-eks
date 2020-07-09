@@ -6,6 +6,7 @@ if [[ $# -eq 1 ]]; then
   BUCKET_NAME="$1"
 else
   BUCKET_NAME=$(jq < cfn-output.json -r '.mythicalbucketoutput // empty')
+  DISTRIBUTION_ID=$(jq < cfn-output.json -r '.mythicaldistribution // empty')
 fi
 
 if [[ -z $BUCKET_NAME ]]; then
@@ -36,3 +37,4 @@ $sed_cmd -i $sed_prog $TEMP_DIR/register.html
 $sed_cmd -i $sed_prog $TEMP_DIR/confirm.html
 
 aws s3 sync $TEMP_DIR s3://$BUCKET_NAME
+aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths="/"
