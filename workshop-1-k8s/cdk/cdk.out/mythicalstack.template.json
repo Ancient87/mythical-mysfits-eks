@@ -973,6 +973,41 @@
         "aws:cdk:path": "mythicalstack/mythical_environment/Resource"
       }
     },
+    "adminroleDBD57144": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "mythicalstack/adminrole/Resource"
+      }
+    },
     "mythicaleksclusterRole7FDBF0E4": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -1293,14 +1328,21 @@
           "Fn::Join": [
             "",
             [
-              "[{\"apiVersion\":\"v1\",\"kind\":\"ConfigMap\",\"metadata\":{\"name\":\"aws-auth\",\"namespace\":\"kube-system\"},\"data\":{\"mapRoles\":\"[{\\\"rolearn\\\":\\\"arn:aws:sts::547168898833:assumed-role/Adminus/makeme\\\",\\\"username\\\":\\\"arn:aws:sts::547168898833:assumed-role/Adminus/makeme\\\",\\\"groups\\\":[\\\"system:masters\\\"]},{\\\"rolearn\\\":\\\"",
+              "[{\"apiVersion\":\"v1\",\"kind\":\"ConfigMap\",\"metadata\":{\"name\":\"aws-auth\",\"namespace\":\"kube-system\"},\"data\":{\"mapRoles\":\"[{\\\"rolearn\\\":\\\"",
               {
                 "Fn::GetAtt": [
-                  "mythicaleksclusterNodegroupDefaultCapacityNodeGroupRoleA2E173B9",
+                  "adminroleDBD57144",
                   "Arn"
                 ]
               },
-              "\\\",\\\"username\\\":\\\"system:node:{{EC2PrivateDNSName}}\\\",\\\"groups\\\":[\\\"system:bootstrappers\\\",\\\"system:nodes\\\"]},{\\\"rolearn\\\":\\\"",
+              "\\\",\\\"username\\\":\\\"",
+              {
+                "Fn::GetAtt": [
+                  "adminroleDBD57144",
+                  "Arn"
+                ]
+              },
+              "\\\",\\\"groups\\\":[\\\"system:masters\\\"]},{\\\"rolearn\\\":\\\"",
               {
                 "Fn::GetAtt": [
                   "mythicaleksnodeNodeGroupRole4F7FCA52",
@@ -1328,98 +1370,6 @@
       "DeletionPolicy": "Delete",
       "Metadata": {
         "aws:cdk:path": "mythicalstack/mythicalekscluster/AwsAuth/manifest/Resource/Default"
-      }
-    },
-    "mythicaleksclusterNodegroupDefaultCapacityNodeGroupRoleA2E173B9": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ec2.amazonaws.com"
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":iam::aws:policy/AmazonEKSWorkerNodePolicy"
-              ]
-            ]
-          },
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":iam::aws:policy/AmazonEKS_CNI_Policy"
-              ]
-            ]
-          },
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-              ]
-            ]
-          }
-        ]
-      },
-      "Metadata": {
-        "aws:cdk:path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/NodeGroupRole/Resource"
-      }
-    },
-    "mythicaleksclusterNodegroupDefaultCapacity193FE1AE": {
-      "Type": "AWS::EKS::Nodegroup",
-      "Properties": {
-        "ClusterName": {
-          "Ref": "mythicalekscluster8E6BEE20"
-        },
-        "NodeRole": {
-          "Fn::GetAtt": [
-            "mythicaleksclusterNodegroupDefaultCapacityNodeGroupRoleA2E173B9",
-            "Arn"
-          ]
-        },
-        "Subnets": [
-          {
-            "Ref": "mythicalclustervpcPrivateSubnet1SubnetB21C708A"
-          },
-          {
-            "Ref": "mythicalclustervpcPrivateSubnet2SubnetDC82F2CA"
-          }
-        ],
-        "ForceUpdateEnabled": true,
-        "InstanceTypes": [
-          "m5.large"
-        ],
-        "ScalingConfig": {
-          "DesiredSize": 2,
-          "MaxSize": 2,
-          "MinSize": 2
-        }
-      },
-      "Metadata": {
-        "aws:cdk:path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/Resource"
       }
     },
     "awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454": {
@@ -1718,7 +1668,13 @@
             {
               "Ref": "mythicalekscluster8E6BEE20"
             },
-            " --region ap-southeast-1 --role-arn arn:aws:sts::547168898833:assumed-role/Adminus/makeme"
+            " --region ap-southeast-1 --role-arn ",
+            {
+              "Fn::GetAtt": [
+                "adminroleDBD57144",
+                "Arn"
+              ]
+            }
           ]
         ]
       }
@@ -1732,7 +1688,13 @@
             {
               "Ref": "mythicalekscluster8E6BEE20"
             },
-            " --region ap-southeast-1 --role-arn arn:aws:sts::547168898833:assumed-role/Adminus/makeme"
+            " --region ap-southeast-1 --role-arn ",
+            {
+              "Fn::GetAtt": [
+                "adminroleDBD57144",
+                "Arn"
+              ]
+            }
           ]
         ]
       }

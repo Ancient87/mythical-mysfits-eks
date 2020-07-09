@@ -9,6 +9,7 @@ from aws_cdk import (
     aws_eks as eks,
     aws_cloud9 as cloud9,
     aws_s3 as s3,
+    aws_dynamodb as ddb,
 )
 import boto3
 
@@ -50,13 +51,9 @@ class MythicalStack(core.Stack):
         
         ######## IAM ########
         
-        #worker_node_role = iam.Role(
-        #    self,
-        #    "mysfitsnodeworkerrole",
-        #    assumed_by=iam.ServicePrincipal(
-        #        service="ec2.amazonaws.com",
-        #    )
-        #)
+        ######## Dynamodb #######
+        
+        
         
         ######## S3 #######
         
@@ -94,10 +91,11 @@ class MythicalStack(core.Stack):
         sts = boto3.client('sts')
         current_user = sts.get_caller_identity()["Arn"]
         
-        my_role = iam.Role.from_role_arn(
+        
+        cluster_master_role = iam.Role(
                 self,
-                "myrole",
-                role_arn=current_user,
+                "adminrole",
+                assumed_by= iam.AccountRootPrincipal(),
             )
 
         
@@ -106,10 +104,11 @@ class MythicalStack(core.Stack):
             "mythicalekscluster",
             cluster_name="mythical_eks_cluster",
             vpc=mythical_cluster_vpc,
-            masters_role=my_role,
+            masters_role=cluster_master_role,
             #vpc_subnets=[ec2.SubnetSelection(
             #    subnet_type=ec2.SubnetType.PUBLIC,    
             #)],
+            default_capacity=0,
             version=eks.KubernetesVersion.V1_16,
         )
         
@@ -117,7 +116,7 @@ class MythicalStack(core.Stack):
             self,
             "mythicaleksnode",
             cluster=mythical_eks_cluster,
-            desired_size=3,
+            desired_size=2,
             subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),

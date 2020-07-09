@@ -47,33 +47,8 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 ## Let's Begin!
 
-### Workshop Setup:
 
-1. Setup your cli credentials in your environment
-
-2. Create the environment using aws CDK and python
-
-```
-cd cdk
-```
-
-```
-pip install poetry
-```
-
-```
-poetry install
-```
-
-```
-poetry run cdk deploy
-```
-
-## Note outputs
-
-1. 
-
-3. Access the AWS Cloud9 Environment created by CloudFormation:
+1. Access the AWS Cloud9 Environment created by CloudFormation:
 
     On the AWS Console home page, type **Cloud9** into the service search bar and select it. Find the environment named like "Project-***STACK_NAME***":
 
@@ -84,7 +59,7 @@ poetry run cdk deploy
 
     On the left pane (Blue), any files downloaded to your environment will appear here in the file tree. In the middle (Red) pane, any documents you open will show up here. Test this out by double clicking on README.md in the left pane and edit the file by adding some arbitrary text. Then save it by clicking File and Save. Keyboard shortcuts will work as well. On the bottom, you will see a bash shell (Yellow). For the remainder of the lab, use this shell to enter all commands. You can also customize your Cloud9 environment by changing themes, moving panes around, etc. (if you like the dark theme, you can select it by clicking the gear icon in the upper right, then "Themes", and choosing the dark theme).
 
-4. Clone the Mythical Mysfits Workshop Repository:
+2. Clone the Mythical Mysfits Workshop Repository:
 
     In the bottom panel of your new Cloud9 IDE, you will see a terminal command line terminal open and ready to use.  Run the following git command in the terminal to clone the necessary code to complete this tutorial:
 
@@ -99,14 +74,53 @@ poetry run cdk deploy
     ```
     $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
     ```
+    
+3.  Deploy the cloud development kit (cdk) stack to setup your workshop          environment
 
-5. Run some additional automated setup steps with the `setup` script:
+    ```
+    cd cdk
+    ```
+    
+    ```
+    pip install poetry
+    ```
+    
+    ```
+    poetry install
+    ```
+    
+    ```
+    poetry run cdk deploy
+    ```
+
+4. Run some additional automated setup steps with the `setup` script:
 
     ```
     $ script/setup
     ```
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
+
+5. Setup environment variables to make your life easier later (use values        shown in the outputs of your CloudFormation stack)
+
+    ```
+    export ECR_MONOLITH=[Outputs:mythicalstack.monolithrepository]
+    export ECR_LIKE=[Outputs:mythicalstack.likerepository]
+    export DDB_TABLE_NAME=[Outputs:mythicalstack.ddbtablename]
+    ```
+    
+
+6. Login to your container repository
+
+    ```
+    aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
+    ```
+    
+    You should see 
+    
+    ```
+    Login Succeeded
+    ```
 
 ### Checkpoint:
 At this point, the Mythical Mysfits website should be available at the static site endpoint for the S3 bucket created by CloudFormation. You can visit the site at <code>http://<b><i>BUCKET_NAME</i></b>.s3-website.<b><i>REGION</i></b>.amazonaws.com/</code>. For your convenience, we've created a link in the CloudFormation outputs tab in the console. Alternatively, you can find the ***BUCKET_NAME*** in the CloudFormation outputs saved in the file `workshop-1/cfn-outputs.json`. ***REGION*** should be the [code](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for the region that you deployed your CloudFormation stack in (e.g. <i>us-west-2</i> for the Oregon region.) Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
@@ -118,13 +132,6 @@ At this point, the Mythical Mysfits website should be available at the static si
 
 ## Lab 1 - Containerize the Mythical Mysfits adoption agency platform
 
-```
-export ECR_MONOLITH=YOUR_REPO_OUTPUT_HERE
-export ECR_LIKE=YOUR_REPO_OUTPUT_HERE
-```
-
-### Login to ECR
-aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 933099113098.dkr.ecr.ap-southeast-1.amazonaws.com
 
 
 The Mythical Mysfits adoption agency infrastructure has always been running directly on EC2 VMs. Our first step will be to modernize how our code is packaged by containerizing the current Mythical Mysfits adoption platform, which we'll also refer to as the monolith application.  To do this, you will create a [Dockerfile](https://docs.docker.com/engine/reference/builder/), which is essentially a recipe for [Docker](https://aws.amazon.com/docker) to build a container image.  You'll use your [AWS Cloud9](https://aws.amazon.com/cloud9/) development environment to author the Dockerfile, build the container image, and run it to confirm it's able to process adoptions.
@@ -326,7 +333,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Use the [docker run](https://docs.docker.com/engine/reference/run/) command to run your image; the -p flag is used to map the host listening port to the container listening port.
 
     <pre>
-    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=<b><i>TABLE_NAME</i></b> monolith-service
+    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=$TABLE_NAME monolith-service
     </pre>
 
     *Note: You can find your DynamoDB table name in the file `workshop-1/cfn-output.json` derived from the outputs of the CloudFormation stack.*
@@ -463,35 +470,78 @@ Kubernetes refers to a YAML formatted template called a [Manifest](https://kuber
 
 <details>
 <summary>INFO: What is a pod?</summary>
-A task is a running set of containers on a single host. You may hear or see 'task' and 'container' used interchangeably. Often, we refer to tasks instead of containers because a task is the unit of work that ECS launches and manages on your cluster. A task can be a single container, or multiple containers that run together.
+A Pod (as in a pod of whales or pea pod) is a group of one or more containers (such as Docker containers), with shared storage/network, and a specification for how to run the containers. A Pod's contents are always co-located and co-scheduled, and run in a shared context. A Pod models an application-specific "logical host" - it contains one or more application containers which are relatively tightly coupled — in a pre-container world, being executed on the same physical or virtual machine would mean being executed on the same logical host.
 
-Fun fact: a task is very similar to a Kubernetes 'pod'.
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/)
+
+
+![Pods](images/05-pod.svg)
+
 </details>
 
-Most task definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
+<details>
+<summary>INFO: What is a deployment?</summary>
+A Deployment provides declarative updates for Pods and ReplicaSets.
 
-In this lab, you will create a task definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with ECS. You will be using the [Fargate](https://aws.amazon.com/fargate/) launch type, which let's you run containers without having to manage servers or other infrastructure. Fargate containers launch with a networking mode called [awsvpc](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html), which gives ECS tasks the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
+You describe a desired state in a Deployment, and the Deployment Controller changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.
+
+[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+
+
+![Pods](images/05-pod.svg)
+
+</details>
+
+Containter definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
+
+In this lab, you will create a pod and deployment definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with Kubernetes. You will be using a managed worker node group in this setup.
+
+EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
+
+#TODO: Change image for EKS
 
 ![Lab 2 Architecture](images/02-arch.png)
 
-*Note: You will use the AWS Management Console for this lab, but remember that you can programmatically accomplish the same thing using the AWS CLI, SDKs, or CloudFormation.*
-
 ### Instructions:
 
-### Here's what you're going to work on in lab 2:
-
-![Lab 1 Architecture](images/01-arch.png)
 
 1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image
 
-    Bla bla bla
+    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the container image definition and update the image attribute to point at the image you pushed earlier.
 
-2. Once this is updated we can deploy to Kubernetes
+2. Before we can use the Kubernetes cluster we need to setup the kubectl cli     to login to it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
+
+    It may looks comething like this
+    <pre>
+    mythicalstack.mythicaleksclusterConfigCommand8881EF53 = aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF
+    </pre>
+    
+    Once done, test that it worked 
+    
+    ```
+    kubectl get nodes --context mythicalcluster
+    ```
+    
+    Your output will look something like the following
     
     <pre>
-    kubectl apply -f app/manifests/monolith.yml 
-    kubectl get pods --namespace mysfits --watch
+    NAME                                            STATUS   ROLES    AGE     VERSION
+    ip-10-0-48-4.ap-southeast-1.compute.internal    Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
+    ip-10-0-66-62.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
+    ip-10-0-95-74.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
     </pre>
+
+3. Once this is set we can deploy to Kubernetes
+    
+    The following command apply the manifest definition to Kuberntes.
+    The result will be, for now, 1 pod running your container image.
+
+    ```
+    kubectl apply -f app/manifests/monolith.yml --context mythicalcluster
+    kubectl get pods --namespace mysfits --watch --context mythicalcluster
+    ```
+    
+    The second command will let you live observe the status of the pods rolling out.
 
 3. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 

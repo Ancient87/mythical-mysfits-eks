@@ -25,7 +25,7 @@ spec:
       containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: 933099113098.dkr.ecr.ap-southeast-1.amazonaws.com/ecr-monolit-194a5x35dmcvi
+          image: 547168898833.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-48cgg29323mf:latest
           ports:
             - containerPort: 8080
 ---

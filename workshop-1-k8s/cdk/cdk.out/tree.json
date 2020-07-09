@@ -1128,9 +1128,47 @@
               }
             }
           },
-          "myrole": {
-            "id": "myrole",
-            "path": "mythicalstack/myrole"
+          "adminrole": {
+            "id": "adminrole",
+            "path": "mythicalstack/adminrole",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/adminrole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "AWS": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "arn:",
+                                  {
+                                    "Ref": "AWS::Partition"
+                                  },
+                                  ":iam::",
+                                  {
+                                    "Ref": "AWS::AccountId"
+                                  },
+                                  ":root"
+                                ]
+                              ]
+                            }
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    }
+                  }
+                }
+              }
+            }
           },
           "mythicalekscluster": {
             "id": "mythicalekscluster",
@@ -1431,112 +1469,6 @@
                             "id": "Default",
                             "path": "mythicalstack/mythicalekscluster/AwsAuth/manifest/Resource/Default"
                           }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "NodegroupDefaultCapacity": {
-                "id": "NodegroupDefaultCapacity",
-                "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity",
-                "children": {
-                  "NodeGroupRole": {
-                    "id": "NodeGroupRole",
-                    "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/NodeGroupRole",
-                    "children": {
-                      "Resource": {
-                        "id": "Resource",
-                        "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/NodeGroupRole/Resource",
-                        "attributes": {
-                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
-                          "aws:cdk:cloudformation:props": {
-                            "assumeRolePolicyDocument": {
-                              "Statement": [
-                                {
-                                  "Action": "sts:AssumeRole",
-                                  "Effect": "Allow",
-                                  "Principal": {
-                                    "Service": "ec2.amazonaws.com"
-                                  }
-                                }
-                              ],
-                              "Version": "2012-10-17"
-                            },
-                            "managedPolicyArns": [
-                              {
-                                "Fn::Join": [
-                                  "",
-                                  [
-                                    "arn:",
-                                    {
-                                      "Ref": "AWS::Partition"
-                                    },
-                                    ":iam::aws:policy/AmazonEKSWorkerNodePolicy"
-                                  ]
-                                ]
-                              },
-                              {
-                                "Fn::Join": [
-                                  "",
-                                  [
-                                    "arn:",
-                                    {
-                                      "Ref": "AWS::Partition"
-                                    },
-                                    ":iam::aws:policy/AmazonEKS_CNI_Policy"
-                                  ]
-                                ]
-                              },
-                              {
-                                "Fn::Join": [
-                                  "",
-                                  [
-                                    "arn:",
-                                    {
-                                      "Ref": "AWS::Partition"
-                                    },
-                                    ":iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-                                  ]
-                                ]
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "Resource": {
-                    "id": "Resource",
-                    "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/Resource",
-                    "attributes": {
-                      "aws:cdk:cloudformation:type": "AWS::EKS::Nodegroup",
-                      "aws:cdk:cloudformation:props": {
-                        "clusterName": {
-                          "Ref": "mythicalekscluster8E6BEE20"
-                        },
-                        "nodeRole": {
-                          "Fn::GetAtt": [
-                            "mythicaleksclusterNodegroupDefaultCapacityNodeGroupRoleA2E173B9",
-                            "Arn"
-                          ]
-                        },
-                        "subnets": [
-                          {
-                            "Ref": "mythicalclustervpcPrivateSubnet1SubnetB21C708A"
-                          },
-                          {
-                            "Ref": "mythicalclustervpcPrivateSubnet2SubnetDC82F2CA"
-                          }
-                        ],
-                        "forceUpdateEnabled": true,
-                        "instanceTypes": [
-                          "m5.large"
-                        ],
-                        "scalingConfig": {
-                          "desiredSize": 2,
-                          "maxSize": 2,
-                          "minSize": 2
                         }
                       }
                     }
