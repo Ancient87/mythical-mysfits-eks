@@ -1,0 +1,3277 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree"
+      },
+      "mythicalstack": {
+        "id": "mythicalstack",
+        "path": "mythicalstack",
+        "children": {
+          "mythical_bucket": {
+            "id": "mythical_bucket",
+            "path": "mythicalstack/mythical_bucket",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythical_bucket/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                  "aws:cdk:cloudformation:props": {}
+                }
+              },
+              "Notifications": {
+                "id": "Notifications",
+                "path": "mythicalstack/mythical_bucket/Notifications"
+              }
+            }
+          },
+          "mythicalclustervpc": {
+            "id": "mythicalclustervpc",
+            "path": "mythicalstack/mythicalclustervpc",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythicalclustervpc/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::VPC",
+                  "aws:cdk:cloudformation:props": {
+                    "cidrBlock": "10.0.0.0/16",
+                    "enableDnsHostnames": true,
+                    "enableDnsSupport": true,
+                    "instanceTenancy": "default",
+                    "tags": [
+                      {
+                        "key": "Name",
+                        "value": "mythicalstack/mythicalclustervpc"
+                      }
+                    ]
+                  }
+                }
+              },
+              "PublicSubnet1": {
+                "id": "PublicSubnet1",
+                "path": "mythicalstack/mythicalclustervpc/PublicSubnet1",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.0.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            0,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": true,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPublicSubnet1RouteTableCB90DBD4"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPublicSubnet1SubnetE28C04FA"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPublicSubnet1RouteTableCB90DBD4"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "gatewayId": {
+                          "Ref": "mythicalclustervpcIGW451F5FD9"
+                        }
+                      }
+                    }
+                  },
+                  "EIP": {
+                    "id": "EIP",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/EIP",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::EIP",
+                      "aws:cdk:cloudformation:props": {
+                        "domain": "vpc",
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "NATGateway": {
+                    "id": "NATGateway",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet1/NATGateway",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::NatGateway",
+                      "aws:cdk:cloudformation:props": {
+                        "allocationId": {
+                          "Fn::GetAtt": [
+                            "mythicalclustervpcPublicSubnet1EIP5AEA7F15",
+                            "AllocationId"
+                          ]
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPublicSubnet1SubnetE28C04FA"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "PublicSubnet2": {
+                "id": "PublicSubnet2",
+                "path": "mythicalstack/mythicalclustervpc/PublicSubnet2",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.64.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            1,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": true,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPublicSubnet2RouteTable8B0C3963"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPublicSubnet2Subnet6BCDA975"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPublicSubnet2RouteTable8B0C3963"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "gatewayId": {
+                          "Ref": "mythicalclustervpcIGW451F5FD9"
+                        }
+                      }
+                    }
+                  },
+                  "EIP": {
+                    "id": "EIP",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/EIP",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::EIP",
+                      "aws:cdk:cloudformation:props": {
+                        "domain": "vpc",
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "NATGateway": {
+                    "id": "NATGateway",
+                    "path": "mythicalstack/mythicalclustervpc/PublicSubnet2/NATGateway",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::NatGateway",
+                      "aws:cdk:cloudformation:props": {
+                        "allocationId": {
+                          "Fn::GetAtt": [
+                            "mythicalclustervpcPublicSubnet2EIP79E9E790",
+                            "AllocationId"
+                          ]
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPublicSubnet2Subnet6BCDA975"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "PrivateSubnet1": {
+                "id": "PrivateSubnet1",
+                "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.128.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            0,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": false,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "kubernetes.io/role/internal-elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PrivateSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/internal-elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PrivateSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet1RouteTableDDFFE15E"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet1SubnetB21C708A"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet1/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet1RouteTableDDFFE15E"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "natGatewayId": {
+                          "Ref": "mythicalclustervpcPublicSubnet1NATGateway27D034B9"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "PrivateSubnet2": {
+                "id": "PrivateSubnet2",
+                "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.192.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            1,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": false,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "kubernetes.io/role/internal-elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PrivateSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        },
+                        "tags": [
+                          {
+                            "key": "kubernetes.io/role/internal-elb",
+                            "value": "1"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalclustervpc/PrivateSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet2RouteTable5AE88421"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet2SubnetDC82F2CA"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalclustervpc/PrivateSubnet2/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalclustervpcPrivateSubnet2RouteTable5AE88421"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "natGatewayId": {
+                          "Ref": "mythicalclustervpcPublicSubnet2NATGateway9EB69F57"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "IGW": {
+                "id": "IGW",
+                "path": "mythicalstack/mythicalclustervpc/IGW",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::InternetGateway",
+                  "aws:cdk:cloudformation:props": {
+                    "tags": [
+                      {
+                        "key": "Name",
+                        "value": "mythicalstack/mythicalclustervpc"
+                      }
+                    ]
+                  }
+                }
+              },
+              "VPCGW": {
+                "id": "VPCGW",
+                "path": "mythicalstack/mythicalclustervpc/VPCGW",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::VPCGatewayAttachment",
+                  "aws:cdk:cloudformation:props": {
+                    "vpcId": {
+                      "Ref": "mythicalclustervpcA66C39BA"
+                    },
+                    "internetGatewayId": {
+                      "Ref": "mythicalclustervpcIGW451F5FD9"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mythicalenvironmentvpc": {
+            "id": "mythicalenvironmentvpc",
+            "path": "mythicalstack/mythicalenvironmentvpc",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythicalenvironmentvpc/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::VPC",
+                  "aws:cdk:cloudformation:props": {
+                    "cidrBlock": "10.0.0.0/16",
+                    "enableDnsHostnames": true,
+                    "enableDnsSupport": true,
+                    "instanceTenancy": "default",
+                    "tags": [
+                      {
+                        "key": "Name",
+                        "value": "mythicalstack/mythicalenvironmentvpc"
+                      }
+                    ]
+                  }
+                }
+              },
+              "PublicSubnet1": {
+                "id": "PublicSubnet1",
+                "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.0.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            0,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": true,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet1RouteTable3E7B8948"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet1Subnet34F021DD"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet1RouteTable3E7B8948"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "gatewayId": {
+                          "Ref": "mythicalenvironmentvpcIGW70661235"
+                        }
+                      }
+                    }
+                  },
+                  "EIP": {
+                    "id": "EIP",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/EIP",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::EIP",
+                      "aws:cdk:cloudformation:props": {
+                        "domain": "vpc",
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "NATGateway": {
+                    "id": "NATGateway",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1/NATGateway",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::NatGateway",
+                      "aws:cdk:cloudformation:props": {
+                        "allocationId": {
+                          "Fn::GetAtt": [
+                            "mythicalenvironmentvpcPublicSubnet1EIP45A1E349",
+                            "AllocationId"
+                          ]
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet1Subnet34F021DD"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "PublicSubnet2": {
+                "id": "PublicSubnet2",
+                "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.64.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            1,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": true,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Public"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet2RouteTableEA8EAFB7"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet2SubnetCC288436"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet2RouteTableEA8EAFB7"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "gatewayId": {
+                          "Ref": "mythicalenvironmentvpcIGW70661235"
+                        }
+                      }
+                    }
+                  },
+                  "EIP": {
+                    "id": "EIP",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/EIP",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::EIP",
+                      "aws:cdk:cloudformation:props": {
+                        "domain": "vpc",
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "NATGateway": {
+                    "id": "NATGateway",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2/NATGateway",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::NatGateway",
+                      "aws:cdk:cloudformation:props": {
+                        "allocationId": {
+                          "Fn::GetAtt": [
+                            "mythicalenvironmentvpcPublicSubnet2EIP3AD59B38",
+                            "AllocationId"
+                          ]
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet2SubnetCC288436"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PublicSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "PrivateSubnet1": {
+                "id": "PrivateSubnet1",
+                "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.128.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            0,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": false,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet1RouteTable7F3ADAC8"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet1Subnet33183921"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet1/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet1RouteTable7F3ADAC8"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "natGatewayId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet1NATGatewayFE43DE07"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "PrivateSubnet2": {
+                "id": "PrivateSubnet2",
+                "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2",
+                "children": {
+                  "Subnet": {
+                    "id": "Subnet",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2/Subnet",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.192.0/18",
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "availabilityZone": {
+                          "Fn::Select": [
+                            1,
+                            {
+                              "Fn::GetAZs": ""
+                            }
+                          ]
+                        },
+                        "mapPublicIpOnLaunch": false,
+                        "tags": [
+                          {
+                            "key": "aws-cdk:subnet-name",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "aws-cdk:subnet-type",
+                            "value": "Private"
+                          },
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Acl": {
+                    "id": "Acl",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2/Acl"
+                  },
+                  "RouteTable": {
+                    "id": "RouteTable",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2/RouteTable",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                      "aws:cdk:cloudformation:props": {
+                        "vpcId": {
+                          "Ref": "mythicalenvironmentvpc2C229CE5"
+                        },
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "RouteTableAssociation": {
+                    "id": "RouteTableAssociation",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2/RouteTableAssociation",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet2RouteTable13E6EF6A"
+                        },
+                        "subnetId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet2Subnet1DA66930"
+                        }
+                      }
+                    }
+                  },
+                  "DefaultRoute": {
+                    "id": "DefaultRoute",
+                    "path": "mythicalstack/mythicalenvironmentvpc/PrivateSubnet2/DefaultRoute",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "routeTableId": {
+                          "Ref": "mythicalenvironmentvpcPrivateSubnet2RouteTable13E6EF6A"
+                        },
+                        "destinationCidrBlock": "0.0.0.0/0",
+                        "natGatewayId": {
+                          "Ref": "mythicalenvironmentvpcPublicSubnet2NATGateway89A23646"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "IGW": {
+                "id": "IGW",
+                "path": "mythicalstack/mythicalenvironmentvpc/IGW",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::InternetGateway",
+                  "aws:cdk:cloudformation:props": {
+                    "tags": [
+                      {
+                        "key": "Name",
+                        "value": "mythicalstack/mythicalenvironmentvpc"
+                      }
+                    ]
+                  }
+                }
+              },
+              "VPCGW": {
+                "id": "VPCGW",
+                "path": "mythicalstack/mythicalenvironmentvpc/VPCGW",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EC2::VPCGatewayAttachment",
+                  "aws:cdk:cloudformation:props": {
+                    "vpcId": {
+                      "Ref": "mythicalenvironmentvpc2C229CE5"
+                    },
+                    "internetGatewayId": {
+                      "Ref": "mythicalenvironmentvpcIGW70661235"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mythical_environment": {
+            "id": "mythical_environment",
+            "path": "mythicalstack/mythical_environment",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythical_environment/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Cloud9::EnvironmentEC2",
+                  "aws:cdk:cloudformation:props": {
+                    "instanceType": "t2.micro",
+                    "name": "mythical_environment",
+                    "subnetId": {
+                      "Ref": "mythicalenvironmentvpcPublicSubnet1Subnet34F021DD"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "myrole": {
+            "id": "myrole",
+            "path": "mythicalstack/myrole"
+          },
+          "mythicalekscluster": {
+            "id": "mythicalekscluster",
+            "path": "mythicalstack/mythicalekscluster",
+            "children": {
+              "Role": {
+                "id": "Role",
+                "path": "mythicalstack/mythicalekscluster/Role",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/mythicalekscluster/Role/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "eks.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/AmazonEKSClusterPolicy"
+                              ]
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/AmazonEKSServicePolicy"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "ControlPlaneSecurityGroup": {
+                "id": "ControlPlaneSecurityGroup",
+                "path": "mythicalstack/mythicalekscluster/ControlPlaneSecurityGroup",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/mythicalekscluster/ControlPlaneSecurityGroup/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroup",
+                      "aws:cdk:cloudformation:props": {
+                        "groupDescription": "EKS Control Plane Security Group",
+                        "securityGroupEgress": [
+                          {
+                            "cidrIp": "0.0.0.0/0",
+                            "description": "Allow all outbound traffic by default",
+                            "ipProtocol": "-1"
+                          }
+                        ],
+                        "vpcId": {
+                          "Ref": "mythicalclustervpcA66C39BA"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythicalekscluster/Resource",
+                "children": {
+                  "CreationRole": {
+                    "id": "CreationRole",
+                    "path": "mythicalstack/mythicalekscluster/Resource/CreationRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/mythicalekscluster/Resource/CreationRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454",
+                                          "Outputs.mythicalstackawscdkawseksClusterResourceProviderOnEventHandlerServiceRoleFC6B8D6FArn"
+                                        ]
+                                      },
+                                      {
+                                        "Fn::GetAtt": [
+                                          "awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454",
+                                          "Outputs.mythicalstackawscdkawseksClusterResourceProviderIsCompleteHandlerServiceRoleBD3DCA98Arn"
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": {
+                                      "Fn::GetAtt": [
+                                        "awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B",
+                                        "Outputs.mythicalstackawscdkawseksKubectlProviderHandlerServiceRole32D7FCCDArn"
+                                      ]
+                                    }
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            }
+                          }
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "mythicalstack/mythicalekscluster/Resource/CreationRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/mythicalekscluster/Resource/CreationRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "iam:PassRole",
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::GetAtt": [
+                                          "mythicaleksclusterRole7FDBF0E4",
+                                          "Arn"
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Action": [
+                                        "ec2:DescribeSubnets",
+                                        "ec2:DescribeRouteTables"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": "*"
+                                    },
+                                    {
+                                      "Action": [
+                                        "eks:CreateCluster",
+                                        "eks:DescribeCluster",
+                                        "eks:DescribeUpdate",
+                                        "eks:DeleteCluster",
+                                        "eks:UpdateClusterVersion",
+                                        "eks:UpdateClusterConfig",
+                                        "eks:CreateFargateProfile",
+                                        "eks:TagResource",
+                                        "eks:UntagResource"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        {
+                                          "Fn::Join": [
+                                            "",
+                                            [
+                                              "arn:",
+                                              {
+                                                "Ref": "AWS::Partition"
+                                              },
+                                              ":eks:ap-southeast-1:",
+                                              {
+                                                "Ref": "AWS::AccountId"
+                                              },
+                                              ":cluster/mythical_eks_cluster"
+                                            ]
+                                          ]
+                                        },
+                                        {
+                                          "Fn::Join": [
+                                            "",
+                                            [
+                                              "arn:",
+                                              {
+                                                "Ref": "AWS::Partition"
+                                              },
+                                              ":eks:ap-southeast-1:",
+                                              {
+                                                "Ref": "AWS::AccountId"
+                                              },
+                                              ":cluster/mythical_eks_cluster/*"
+                                            ]
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Action": [
+                                        "eks:DescribeFargateProfile",
+                                        "eks:DeleteFargateProfile"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            "arn:",
+                                            {
+                                              "Ref": "AWS::Partition"
+                                            },
+                                            ":eks:ap-southeast-1:",
+                                            {
+                                              "Ref": "AWS::AccountId"
+                                            },
+                                            ":fargateprofile/mythical_eks_cluster/*"
+                                          ]
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Action": [
+                                        "iam:GetRole",
+                                        "iam:listAttachedRolePolicies"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": "*"
+                                    },
+                                    {
+                                      "Action": "iam:CreateServiceLinkedRole",
+                                      "Effect": "Allow",
+                                      "Resource": "*"
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "mythicaleksclusterCreationRoleDefaultPolicy2FE5F52C",
+                                "roles": [
+                                  {
+                                    "Ref": "mythicaleksclusterCreationRole728BD4D5"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/mythicalekscluster/Resource/Resource",
+                    "children": {
+                      "Default": {
+                        "id": "Default",
+                        "path": "mythicalstack/mythicalekscluster/Resource/Resource/Default"
+                      }
+                    }
+                  }
+                }
+              },
+              "KubectlReadyBarrier": {
+                "id": "KubectlReadyBarrier",
+                "path": "mythicalstack/mythicalekscluster/KubectlReadyBarrier"
+              },
+              "AwsAuth": {
+                "id": "AwsAuth",
+                "path": "mythicalstack/mythicalekscluster/AwsAuth",
+                "children": {
+                  "manifest": {
+                    "id": "manifest",
+                    "path": "mythicalstack/mythicalekscluster/AwsAuth/manifest",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/mythicalekscluster/AwsAuth/manifest/Resource",
+                        "children": {
+                          "Default": {
+                            "id": "Default",
+                            "path": "mythicalstack/mythicalekscluster/AwsAuth/manifest/Resource/Default"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "NodegroupDefaultCapacity": {
+                "id": "NodegroupDefaultCapacity",
+                "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity",
+                "children": {
+                  "NodeGroupRole": {
+                    "id": "NodeGroupRole",
+                    "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/NodeGroupRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/NodeGroupRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "ec2.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/AmazonEKSWorkerNodePolicy"
+                                  ]
+                                ]
+                              },
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/AmazonEKS_CNI_Policy"
+                                  ]
+                                ]
+                              },
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/mythicalekscluster/NodegroupDefaultCapacity/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EKS::Nodegroup",
+                      "aws:cdk:cloudformation:props": {
+                        "clusterName": {
+                          "Ref": "mythicalekscluster8E6BEE20"
+                        },
+                        "nodeRole": {
+                          "Fn::GetAtt": [
+                            "mythicaleksclusterNodegroupDefaultCapacityNodeGroupRoleA2E173B9",
+                            "Arn"
+                          ]
+                        },
+                        "subnets": [
+                          {
+                            "Ref": "mythicalclustervpcPrivateSubnet1SubnetB21C708A"
+                          },
+                          {
+                            "Ref": "mythicalclustervpcPrivateSubnet2SubnetDC82F2CA"
+                          }
+                        ],
+                        "forceUpdateEnabled": true,
+                        "instanceTypes": [
+                          "m5.large"
+                        ],
+                        "scalingConfig": {
+                          "desiredSize": 2,
+                          "maxSize": 2,
+                          "minSize": 2
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "ConfigCommand": {
+                "id": "ConfigCommand",
+                "path": "mythicalstack/mythicalekscluster/ConfigCommand"
+              },
+              "GetTokenCommand": {
+                "id": "GetTokenCommand",
+                "path": "mythicalstack/mythicalekscluster/GetTokenCommand"
+              }
+            }
+          },
+          "@aws-cdk--aws-eks.ClusterResourceProvider": {
+            "id": "@aws-cdk--aws-eks.ClusterResourceProvider",
+            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider",
+            "children": {
+              "OnEventHandler": {
+                "id": "OnEventHandler",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Code": {
+                    "id": "Code",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/Code",
+                    "children": {
+                      "Stage": {
+                        "id": "Stage",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/Code/Stage"
+                      },
+                      "AssetBucket": {
+                        "id": "AssetBucket",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/Code/AssetBucket"
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/OnEventHandler/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "s3Bucket": {
+                            "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767Ref"
+                          },
+                          "s3Key": {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Select": [
+                                    0,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Fn::Select": [
+                                    1,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        },
+                        "handler": "index.onEvent",
+                        "role": {
+                          "Fn::GetAtt": [
+                            "OnEventHandlerServiceRole15A26729",
+                            "Arn"
+                          ]
+                        },
+                        "runtime": "nodejs12.x",
+                        "description": "onEvent handler for EKS cluster resource provider",
+                        "timeout": 60
+                      }
+                    }
+                  }
+                }
+              },
+              "IsCompleteHandler": {
+                "id": "IsCompleteHandler",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Code": {
+                    "id": "Code",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/Code",
+                    "children": {
+                      "Stage": {
+                        "id": "Stage",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/Code/Stage"
+                      },
+                      "AssetBucket": {
+                        "id": "AssetBucket",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/Code/AssetBucket"
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/IsCompleteHandler/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "s3Bucket": {
+                            "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767Ref"
+                          },
+                          "s3Key": {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Select": [
+                                    0,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Fn::Select": [
+                                    1,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        },
+                        "handler": "index.isComplete",
+                        "role": {
+                          "Fn::GetAtt": [
+                            "IsCompleteHandlerServiceRole5810CC58",
+                            "Arn"
+                          ]
+                        },
+                        "runtime": "nodejs12.x",
+                        "description": "isComplete handler for EKS cluster resource provider",
+                        "timeout": 60
+                      }
+                    }
+                  }
+                }
+              },
+              "Provider": {
+                "id": "Provider",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider",
+                "children": {
+                  "framework-onEvent": {
+                    "id": "framework-onEvent",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent",
+                    "children": {
+                      "ServiceRole": {
+                        "id": "ServiceRole",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/ServiceRole",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/ServiceRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "lambda.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "managedPolicyArns": [
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/ServiceRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/ServiceRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "OnEventHandler42BEBAE0",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "IsCompleteHandler7073F4DA",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "states:StartExecution",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Ref": "Providerwaiterstatemachine5D4A9DF0"
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "ProviderframeworkonEventServiceRoleDefaultPolicy48CD2133",
+                                    "roles": [
+                                      {
+                                        "Ref": "ProviderframeworkonEventServiceRole9FF04296"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Code": {
+                        "id": "Code",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/Code",
+                        "children": {
+                          "Stage": {
+                            "id": "Stage",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/Code/Stage"
+                          },
+                          "AssetBucket": {
+                            "id": "AssetBucket",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/Code/AssetBucket"
+                          }
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onEvent/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                          "aws:cdk:cloudformation:props": {
+                            "code": {
+                              "s3Bucket": {
+                                "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref"
+                              },
+                              "s3Key": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    {
+                                      "Fn::Select": [
+                                        0,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Select": [
+                                        1,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            "handler": "framework.onEvent",
+                            "role": {
+                              "Fn::GetAtt": [
+                                "ProviderframeworkonEventServiceRole9FF04296",
+                                "Arn"
+                              ]
+                            },
+                            "runtime": "nodejs10.x",
+                            "description": "AWS CDK resource provider framework - onEvent (mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider)",
+                            "environment": {
+                              "variables": {
+                                "USER_ON_EVENT_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "OnEventHandler42BEBAE0",
+                                    "Arn"
+                                  ]
+                                },
+                                "USER_IS_COMPLETE_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "IsCompleteHandler7073F4DA",
+                                    "Arn"
+                                  ]
+                                },
+                                "WAITER_STATE_MACHINE_ARN": {
+                                  "Ref": "Providerwaiterstatemachine5D4A9DF0"
+                                }
+                              }
+                            },
+                            "timeout": 900
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "framework-isComplete": {
+                    "id": "framework-isComplete",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete",
+                    "children": {
+                      "ServiceRole": {
+                        "id": "ServiceRole",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/ServiceRole",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/ServiceRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "lambda.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "managedPolicyArns": [
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/ServiceRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/ServiceRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "OnEventHandler42BEBAE0",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "IsCompleteHandler7073F4DA",
+                                              "Arn"
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "ProviderframeworkisCompleteServiceRoleDefaultPolicy2E7140AC",
+                                    "roles": [
+                                      {
+                                        "Ref": "ProviderframeworkisCompleteServiceRoleB1087139"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Code": {
+                        "id": "Code",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/Code",
+                        "children": {
+                          "Stage": {
+                            "id": "Stage",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/Code/Stage"
+                          },
+                          "AssetBucket": {
+                            "id": "AssetBucket",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/Code/AssetBucket"
+                          }
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-isComplete/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                          "aws:cdk:cloudformation:props": {
+                            "code": {
+                              "s3Bucket": {
+                                "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref"
+                              },
+                              "s3Key": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    {
+                                      "Fn::Select": [
+                                        0,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Select": [
+                                        1,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            "handler": "framework.isComplete",
+                            "role": {
+                              "Fn::GetAtt": [
+                                "ProviderframeworkisCompleteServiceRoleB1087139",
+                                "Arn"
+                              ]
+                            },
+                            "runtime": "nodejs10.x",
+                            "description": "AWS CDK resource provider framework - isComplete (mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider)",
+                            "environment": {
+                              "variables": {
+                                "USER_ON_EVENT_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "OnEventHandler42BEBAE0",
+                                    "Arn"
+                                  ]
+                                },
+                                "USER_IS_COMPLETE_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "IsCompleteHandler7073F4DA",
+                                    "Arn"
+                                  ]
+                                }
+                              }
+                            },
+                            "timeout": 900
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "framework-onTimeout": {
+                    "id": "framework-onTimeout",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout",
+                    "children": {
+                      "ServiceRole": {
+                        "id": "ServiceRole",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/ServiceRole",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/ServiceRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "lambda.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "managedPolicyArns": [
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/ServiceRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "OnEventHandler42BEBAE0",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "IsCompleteHandler7073F4DA",
+                                              "Arn"
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "ProviderframeworkonTimeoutServiceRoleDefaultPolicy2688969F",
+                                    "roles": [
+                                      {
+                                        "Ref": "ProviderframeworkonTimeoutServiceRole28643D26"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Code": {
+                        "id": "Code",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/Code",
+                        "children": {
+                          "Stage": {
+                            "id": "Stage",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/Code/Stage"
+                          },
+                          "AssetBucket": {
+                            "id": "AssetBucket",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/Code/AssetBucket"
+                          }
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/framework-onTimeout/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                          "aws:cdk:cloudformation:props": {
+                            "code": {
+                              "s3Bucket": {
+                                "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref"
+                              },
+                              "s3Key": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    {
+                                      "Fn::Select": [
+                                        0,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Select": [
+                                        1,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            "handler": "framework.onTimeout",
+                            "role": {
+                              "Fn::GetAtt": [
+                                "ProviderframeworkonTimeoutServiceRole28643D26",
+                                "Arn"
+                              ]
+                            },
+                            "runtime": "nodejs10.x",
+                            "description": "AWS CDK resource provider framework - onTimeout (mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider)",
+                            "environment": {
+                              "variables": {
+                                "USER_ON_EVENT_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "OnEventHandler42BEBAE0",
+                                    "Arn"
+                                  ]
+                                },
+                                "USER_IS_COMPLETE_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "IsCompleteHandler7073F4DA",
+                                    "Arn"
+                                  ]
+                                }
+                              }
+                            },
+                            "timeout": 900
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "waiter-state-machine": {
+                    "id": "waiter-state-machine",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine",
+                    "children": {
+                      "Role": {
+                        "id": "Role",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine/Role",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine/Role/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "states.ap-southeast-1.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                }
+                              }
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine/Role/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine/Role/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "ProviderframeworkisComplete26D7B0CB",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "ProviderframeworkonTimeout0B47CA38",
+                                              "Arn"
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "ProviderwaiterstatemachineRoleDefaultPolicyD3C3DA1A",
+                                    "roles": [
+                                      {
+                                        "Ref": "ProviderwaiterstatemachineRole0C7159F9"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/Provider/waiter-state-machine/Resource"
+                      }
+                    }
+                  }
+                }
+              },
+              "mythicalstackawscdkawseksClusterResourceProviderOnEventHandlerServiceRoleFC6B8D6FArn": {
+                "id": "mythicalstackawscdkawseksClusterResourceProviderOnEventHandlerServiceRoleFC6B8D6FArn",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/mythicalstackawscdkawseksClusterResourceProviderOnEventHandlerServiceRoleFC6B8D6FArn"
+              },
+              "mythicalstackawscdkawseksClusterResourceProviderIsCompleteHandlerServiceRoleBD3DCA98Arn": {
+                "id": "mythicalstackawscdkawseksClusterResourceProviderIsCompleteHandlerServiceRoleBD3DCA98Arn",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/mythicalstackawscdkawseksClusterResourceProviderIsCompleteHandlerServiceRoleBD3DCA98Arn"
+              },
+              "mythicalstackawscdkawseksClusterResourceProviderframeworkonEventD48AB803Arn": {
+                "id": "mythicalstackawscdkawseksClusterResourceProviderframeworkonEventD48AB803Arn",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/mythicalstackawscdkawseksClusterResourceProviderframeworkonEventD48AB803Arn"
+              },
+              "reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767.Ref"
+              },
+              "reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/reference-to-mythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7.Ref"
+              },
+              "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref"
+              },
+              "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider/reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref"
+              }
+            }
+          },
+          "@aws-cdk--aws-eks.ClusterResourceProvider.NestedStack": {
+            "id": "@aws-cdk--aws-eks.ClusterResourceProvider.NestedStack",
+            "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStack",
+            "children": {
+              "@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource": {
+                "id": "@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource",
+                "path": "mythicalstack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::CloudFormation::Stack",
+                  "aws:cdk:cloudformation:props": {
+                    "templateUrl": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "https://s3.ap-southeast-1.",
+                          {
+                            "Ref": "AWS::URLSuffix"
+                          },
+                          "/",
+                          {
+                            "Ref": "AssetParameterscabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523S3BucketE1CAE790"
+                          },
+                          "/",
+                          {
+                            "Fn::Select": [
+                              0,
+                              {
+                                "Fn::Split": [
+                                  "||",
+                                  {
+                                    "Ref": "AssetParameterscabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523S3VersionKey5249EB19"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Select": [
+                              1,
+                              {
+                                "Fn::Split": [
+                                  "||",
+                                  {
+                                    "Ref": "AssetParameterscabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523S3VersionKey5249EB19"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      ]
+                    },
+                    "parameters": {
+                      "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3BucketEAE68767Ref": {
+                        "Ref": "AssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3Bucket2C6BE99F"
+                      },
+                      "referencetomythicalstackAssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKeyD0C64FC7Ref": {
+                        "Ref": "AssetParametersfcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796S3VersionKey4D7F7B64"
+                      },
+                      "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref": {
+                        "Ref": "AssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3Bucket9266BA0E"
+                      },
+                      "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref": {
+                        "Ref": "AssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKey5B5295A8"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "AssetParameters": {
+            "id": "AssetParameters",
+            "path": "mythicalstack/AssetParameters",
+            "children": {
+              "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796": {
+                "id": "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
+                "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/ArtifactHash"
+                  }
+                }
+              },
+              "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff": {
+                "id": "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
+                "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/ArtifactHash"
+                  }
+                }
+              },
+              "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050": {
+                "id": "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
+                "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/ArtifactHash"
+                  }
+                }
+              },
+              "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523": {
+                "id": "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
+                "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/ArtifactHash"
+                  }
+                }
+              },
+              "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7": {
+                "id": "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
+                "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/ArtifactHash"
+                  }
+                }
+              }
+            }
+          },
+          "@aws-cdk--aws-eks.KubectlProvider": {
+            "id": "@aws-cdk--aws-eks.KubectlProvider",
+            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider",
+            "children": {
+              "kubectl-layer-2.0.0": {
+                "id": "kubectl-layer-2.0.0",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/kubectl-layer-2.0.0",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/kubectl-layer-2.0.0/Resource"
+                  }
+                }
+              },
+              "Handler": {
+                "id": "Handler",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/ServiceRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/ServiceRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "eks:DescribeCluster",
+                                      "Effect": "Allow",
+                                      "Resource": "*"
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "HandlerServiceRoleDefaultPolicyCBD0CC91",
+                                "roles": [
+                                  {
+                                    "Ref": "HandlerServiceRoleFCDC14AE"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Code": {
+                    "id": "Code",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/Code",
+                    "children": {
+                      "Stage": {
+                        "id": "Stage",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/Code/Stage"
+                      },
+                      "AssetBucket": {
+                        "id": "AssetBucket",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/Code/AssetBucket"
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Handler/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "s3Bucket": {
+                            "Ref": "referencetomythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3BucketDE47F7FARef"
+                          },
+                          "s3Key": {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Select": [
+                                    0,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Fn::Select": [
+                                    1,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "referencetomythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02Ref"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        },
+                        "handler": "index.handler",
+                        "role": {
+                          "Fn::GetAtt": [
+                            "HandlerServiceRoleFCDC14AE",
+                            "Arn"
+                          ]
+                        },
+                        "runtime": "python3.7",
+                        "description": "onEvent handler for EKS kubectl resource provider",
+                        "layers": [
+                          {
+                            "Fn::GetAtt": [
+                              "kubectllayer2001D18DC8F",
+                              "Outputs.LayerVersionArn"
+                            ]
+                          }
+                        ],
+                        "memorySize": 256,
+                        "timeout": 900
+                      }
+                    }
+                  }
+                }
+              },
+              "Provider": {
+                "id": "Provider",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider",
+                "children": {
+                  "framework-onEvent": {
+                    "id": "framework-onEvent",
+                    "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent",
+                    "children": {
+                      "ServiceRole": {
+                        "id": "ServiceRole",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/ServiceRole",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/ServiceRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "lambda.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "managedPolicyArns": [
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/ServiceRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/ServiceRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": "lambda:InvokeFunction",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "Handler886CB40B",
+                                              "Arn"
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "ProviderframeworkonEventServiceRoleDefaultPolicy48CD2133",
+                                    "roles": [
+                                      {
+                                        "Ref": "ProviderframeworkonEventServiceRole9FF04296"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Code": {
+                        "id": "Code",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/Code",
+                        "children": {
+                          "Stage": {
+                            "id": "Stage",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/Code/Stage"
+                          },
+                          "AssetBucket": {
+                            "id": "AssetBucket",
+                            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/Code/AssetBucket"
+                          }
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider/framework-onEvent/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                          "aws:cdk:cloudformation:props": {
+                            "code": {
+                              "s3Bucket": {
+                                "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref"
+                              },
+                              "s3Key": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    {
+                                      "Fn::Select": [
+                                        0,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Select": [
+                                        1,
+                                        {
+                                          "Fn::Split": [
+                                            "||",
+                                            {
+                                              "Ref": "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            "handler": "framework.onEvent",
+                            "role": {
+                              "Fn::GetAtt": [
+                                "ProviderframeworkonEventServiceRole9FF04296",
+                                "Arn"
+                              ]
+                            },
+                            "runtime": "nodejs10.x",
+                            "description": "AWS CDK resource provider framework - onEvent (mythicalstack/@aws-cdk--aws-eks.KubectlProvider/Provider)",
+                            "environment": {
+                              "variables": {
+                                "USER_ON_EVENT_FUNCTION_ARN": {
+                                  "Fn::GetAtt": [
+                                    "Handler886CB40B",
+                                    "Arn"
+                                  ]
+                                }
+                              }
+                            },
+                            "timeout": 900
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "mythicalstackawscdkawseksKubectlProviderHandlerServiceRole32D7FCCDArn": {
+                "id": "mythicalstackawscdkawseksKubectlProviderHandlerServiceRole32D7FCCDArn",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/mythicalstackawscdkawseksKubectlProviderHandlerServiceRole32D7FCCDArn"
+              },
+              "mythicalstackawscdkawseksKubectlProviderframeworkonEventB26E91B9Arn": {
+                "id": "mythicalstackawscdkawseksKubectlProviderframeworkonEventB26E91B9Arn",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/mythicalstackawscdkawseksKubectlProviderframeworkonEventB26E91B9Arn"
+              },
+              "reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3BucketDE47F7FA.Ref": {
+                "id": "reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3BucketDE47F7FA.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3BucketDE47F7FA.Ref"
+              },
+              "reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02.Ref": {
+                "id": "reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/reference-to-mythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02.Ref"
+              },
+              "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004.Ref"
+              },
+              "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref": {
+                "id": "reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider/reference-to-mythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8.Ref"
+              }
+            }
+          },
+          "@aws-cdk--aws-eks.KubectlProvider.NestedStack": {
+            "id": "@aws-cdk--aws-eks.KubectlProvider.NestedStack",
+            "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider.NestedStack",
+            "children": {
+              "@aws-cdk--aws-eks.KubectlProvider.NestedStackResource": {
+                "id": "@aws-cdk--aws-eks.KubectlProvider.NestedStackResource",
+                "path": "mythicalstack/@aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::CloudFormation::Stack",
+                  "aws:cdk:cloudformation:props": {
+                    "templateUrl": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "https://s3.ap-southeast-1.",
+                          {
+                            "Ref": "AWS::URLSuffix"
+                          },
+                          "/",
+                          {
+                            "Ref": "AssetParameters457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7S3Bucket2311B041"
+                          },
+                          "/",
+                          {
+                            "Fn::Select": [
+                              0,
+                              {
+                                "Fn::Split": [
+                                  "||",
+                                  {
+                                    "Ref": "AssetParameters457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7S3VersionKeyE4A58933"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Select": [
+                              1,
+                              {
+                                "Fn::Split": [
+                                  "||",
+                                  {
+                                    "Ref": "AssetParameters457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7S3VersionKeyE4A58933"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      ]
+                    },
+                    "parameters": {
+                      "referencetomythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3BucketDE47F7FARef": {
+                        "Ref": "AssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3Bucket0EAA682D"
+                      },
+                      "referencetomythicalstackAssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF1FDCF02Ref": {
+                        "Ref": "AssetParameters2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050S3VersionKeyF3400812"
+                      },
+                      "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3BucketD7379004Ref": {
+                        "Ref": "AssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3Bucket9266BA0E"
+                      },
+                      "referencetomythicalstackAssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKeyDA1CFAB8Ref": {
+                        "Ref": "AssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKey5B5295A8"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mythicaleksnode": {
+            "id": "mythicaleksnode",
+            "path": "mythicalstack/mythicaleksnode",
+            "children": {
+              "NodeGroupRole": {
+                "id": "NodeGroupRole",
+                "path": "mythicalstack/mythicaleksnode/NodeGroupRole",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "mythicalstack/mythicaleksnode/NodeGroupRole/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/AmazonEKSWorkerNodePolicy"
+                              ]
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/AmazonEKS_CNI_Policy"
+                              ]
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "mythicalstack/mythicaleksnode/NodeGroupRole/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "mythicalstack/mythicaleksnode/NodeGroupRole/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "ecr:BatchCheckLayerAvailability",
+                                    "ecr:GetDownloadUrlForLayer",
+                                    "ecr:BatchGetImage"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": {
+                                    "Fn::GetAtt": [
+                                      "monolithDEBCB820",
+                                      "Arn"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "Action": "ecr:GetAuthorizationToken",
+                                  "Effect": "Allow",
+                                  "Resource": "*"
+                                },
+                                {
+                                  "Action": [
+                                    "ecr:BatchCheckLayerAvailability",
+                                    "ecr:GetDownloadUrlForLayer",
+                                    "ecr:BatchGetImage"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": {
+                                    "Fn::GetAtt": [
+                                      "like10BE6EAE",
+                                      "Arn"
+                                    ]
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "mythicaleksnodeNodeGroupRoleDefaultPolicyF5EDDE2E",
+                            "roles": [
+                              {
+                                "Ref": "mythicaleksnodeNodeGroupRole4F7FCA52"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/mythicaleksnode/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::EKS::Nodegroup",
+                  "aws:cdk:cloudformation:props": {
+                    "clusterName": {
+                      "Ref": "mythicalekscluster8E6BEE20"
+                    },
+                    "nodeRole": {
+                      "Fn::GetAtt": [
+                        "mythicaleksnodeNodeGroupRole4F7FCA52",
+                        "Arn"
+                      ]
+                    },
+                    "subnets": [
+                      {
+                        "Ref": "mythicalclustervpcPublicSubnet1SubnetE28C04FA"
+                      },
+                      {
+                        "Ref": "mythicalclustervpcPublicSubnet2Subnet6BCDA975"
+                      }
+                    ],
+                    "forceUpdateEnabled": true,
+                    "scalingConfig": {
+                      "desiredSize": 3,
+                      "maxSize": 3,
+                      "minSize": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mythical_eks_cluster": {
+            "id": "mythical_eks_cluster",
+            "path": "mythicalstack/mythical_eks_cluster"
+          },
+          "monolith": {
+            "id": "monolith",
+            "path": "mythicalstack/monolith",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/monolith/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ECR::Repository",
+                  "aws:cdk:cloudformation:props": {}
+                }
+              }
+            }
+          },
+          "monolith_repository": {
+            "id": "monolith_repository",
+            "path": "mythicalstack/monolith_repository"
+          },
+          "like": {
+            "id": "like",
+            "path": "mythicalstack/like",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "mythicalstack/like/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ECR::Repository",
+                  "aws:cdk:cloudformation:props": {}
+                }
+              }
+            }
+          },
+          "like_repository": {
+            "id": "like_repository",
+            "path": "mythicalstack/like_repository"
+          }
+        }
+      }
+    }
+  }
+}

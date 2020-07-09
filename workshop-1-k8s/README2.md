@@ -49,6 +49,8 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 ### Workshop Setup:
 
+2. Setup your Cloud9 environment
+    
 
 3. Access the AWS Cloud9 Environment created by CloudFormation:
 
@@ -66,7 +68,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     In the bottom panel of your new Cloud9 IDE, you will see a terminal command line terminal open and ready to use.  Run the following git command in the terminal to clone the necessary code to complete this tutorial:
 
     ```
-    $ git clone https://github.com/aws-samples/amazon-ecs-mythicalmysfits-workshop.git
+    $ git clone https://github.com/ancient87/amazon-ecs-mythicalmysfits-workshop-eks.git
     ```
 
     After cloning the repository, you'll see that your project explorer now includes the files cloned.
@@ -74,7 +76,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     In the terminal, change directory to the subdirectory for this workshop in the repo:
 
     ```
-    $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1
+    $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-k8s
     ```
 
 5. Run some additional automated setup steps with the `setup` script:
