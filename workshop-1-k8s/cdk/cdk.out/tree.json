@@ -97,9 +97,9 @@
               }
             }
           },
-          "mythical_table_output": {
-            "id": "mythical_table_output",
-            "path": "mythicalstack/mythical_table_output"
+          "mythicaltableoutput": {
+            "id": "mythicaltableoutput",
+            "path": "mythicalstack/mythicaltableoutput"
           },
           "mythical_bucket": {
             "id": "mythical_bucket",
@@ -282,400 +282,13 @@
               }
             }
           },
-          "spadeploy": {
-            "id": "spadeploy",
-            "path": "mythicalstack/spadeploy",
-            "children": {
-              "CustomResourceHandler": {
-                "id": "CustomResourceHandler",
-                "path": "mythicalstack/spadeploy/CustomResourceHandler"
-              },
-              "Asset1": {
-                "id": "Asset1",
-                "path": "mythicalstack/spadeploy/Asset1",
-                "children": {
-                  "Stage": {
-                    "id": "Stage",
-                    "path": "mythicalstack/spadeploy/Asset1/Stage"
-                  },
-                  "AssetBucket": {
-                    "id": "AssetBucket",
-                    "path": "mythicalstack/spadeploy/Asset1/AssetBucket"
-                  }
-                }
-              },
-              "CustomResource": {
-                "id": "CustomResource",
-                "path": "mythicalstack/spadeploy/CustomResource",
-                "children": {
-                  "Default": {
-                    "id": "Default",
-                    "path": "mythicalstack/spadeploy/CustomResource/Default"
-                  }
-                }
-              }
-            }
-          },
-          "Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C": {
-            "id": "Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C",
-            "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C",
-            "children": {
-              "ServiceRole": {
-                "id": "ServiceRole",
-                "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole",
-                "children": {
-                  "Resource": {
-                    "id": "Resource",
-                    "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource",
-                    "attributes": {
-                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
-                      "aws:cdk:cloudformation:props": {
-                        "assumeRolePolicyDocument": {
-                          "Statement": [
-                            {
-                              "Action": "sts:AssumeRole",
-                              "Effect": "Allow",
-                              "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                              }
-                            }
-                          ],
-                          "Version": "2012-10-17"
-                        },
-                        "managedPolicyArns": [
-                          {
-                            "Fn::Join": [
-                              "",
-                              [
-                                "arn:",
-                                {
-                                  "Ref": "AWS::Partition"
-                                },
-                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-                              ]
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "DefaultPolicy": {
-                    "id": "DefaultPolicy",
-                    "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy",
-                    "children": {
-                      "Resource": {
-                        "id": "Resource",
-                        "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource",
-                        "attributes": {
-                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
-                          "aws:cdk:cloudformation:props": {
-                            "policyDocument": {
-                              "Statement": [
-                                {
-                                  "Action": [
-                                    "s3:GetObject*",
-                                    "s3:GetBucket*",
-                                    "s3:List*"
-                                  ],
-                                  "Effect": "Allow",
-                                  "Resource": [
-                                    {
-                                      "Fn::Join": [
-                                        "",
-                                        [
-                                          "arn:",
-                                          {
-                                            "Ref": "AWS::Partition"
-                                          },
-                                          ":s3:::",
-                                          {
-                                            "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781"
-                                          }
-                                        ]
-                                      ]
-                                    },
-                                    {
-                                      "Fn::Join": [
-                                        "",
-                                        [
-                                          "arn:",
-                                          {
-                                            "Ref": "AWS::Partition"
-                                          },
-                                          ":s3:::",
-                                          {
-                                            "Ref": "AssetParameters38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95S3BucketA8D7D781"
-                                          },
-                                          "/*"
-                                        ]
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Action": [
-                                    "s3:GetObject*",
-                                    "s3:GetBucket*",
-                                    "s3:List*",
-                                    "s3:DeleteObject*",
-                                    "s3:PutObject*",
-                                    "s3:Abort*"
-                                  ],
-                                  "Effect": "Allow",
-                                  "Resource": [
-                                    {
-                                      "Fn::GetAtt": [
-                                        "mythicalbucket00734ECC",
-                                        "Arn"
-                                      ]
-                                    },
-                                    {
-                                      "Fn::Join": [
-                                        "",
-                                        [
-                                          {
-                                            "Fn::GetAtt": [
-                                              "mythicalbucket00734ECC",
-                                              "Arn"
-                                            ]
-                                          },
-                                          "/*"
-                                        ]
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Action": [
-                                    "cloudfront:GetInvalidation",
-                                    "cloudfront:CreateInvalidation"
-                                  ],
-                                  "Effect": "Allow",
-                                  "Resource": "*"
-                                }
-                              ],
-                              "Version": "2012-10-17"
-                            },
-                            "policyName": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
-                            "roles": [
-                              {
-                                "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "Code": {
-                "id": "Code",
-                "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Code",
-                "children": {
-                  "Stage": {
-                    "id": "Stage",
-                    "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Code/Stage"
-                  },
-                  "AssetBucket": {
-                    "id": "AssetBucket",
-                    "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Code/AssetBucket"
-                  }
-                }
-              },
-              "Resource": {
-                "id": "Resource",
-                "path": "mythicalstack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource",
-                "attributes": {
-                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
-                  "aws:cdk:cloudformation:props": {
-                    "code": {
-                      "s3Bucket": {
-                        "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3BucketB6159468"
-                      },
-                      "s3Key": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            {
-                              "Fn::Select": [
-                                0,
-                                {
-                                  "Fn::Split": [
-                                    "||",
-                                    {
-                                      "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3VersionKey2060CAC0"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "Fn::Select": [
-                                1,
-                                {
-                                  "Fn::Split": [
-                                    "||",
-                                    {
-                                      "Ref": "AssetParameters4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50S3VersionKey2060CAC0"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        ]
-                      }
-                    },
-                    "handler": "index.handler",
-                    "role": {
-                      "Fn::GetAtt": [
-                        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
-                        "Arn"
-                      ]
-                    },
-                    "runtime": "python3.6",
-                    "timeout": 900
-                  }
-                }
-              }
-            }
-          },
-          "AssetParameters": {
-            "id": "AssetParameters",
-            "path": "mythicalstack/AssetParameters",
-            "children": {
-              "4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50": {
-                "id": "4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50",
-                "path": "mythicalstack/AssetParameters/4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/4184245adc1f2ed71e1f0ae5719f8fd7f34324b750f1bf06b2fb5cf1f4014f50/ArtifactHash"
-                  }
-                }
-              },
-              "38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95": {
-                "id": "38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95",
-                "path": "mythicalstack/AssetParameters/38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/38dc075d940489781e762900ba41051b2783a51198dfea4e7cd7d7a0e11f0f95/ArtifactHash"
-                  }
-                }
-              },
-              "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796": {
-                "id": "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
-                "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/ArtifactHash"
-                  }
-                }
-              },
-              "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff": {
-                "id": "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
-                "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/ArtifactHash"
-                  }
-                }
-              },
-              "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050": {
-                "id": "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
-                "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/ArtifactHash"
-                  }
-                }
-              },
-              "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523": {
-                "id": "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
-                "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/ArtifactHash"
-                  }
-                }
-              },
-              "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7": {
-                "id": "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
-                "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/ArtifactHash"
-                  }
-                }
-              }
-            }
-          },
           "mythical_bucket_website": {
             "id": "mythical_bucket_website",
             "path": "mythicalstack/mythical_bucket_website"
+          },
+          "mythical_bucket_output": {
+            "id": "mythical_bucket_output",
+            "path": "mythicalstack/mythical_bucket_output"
           },
           "mythicalclustervpc": {
             "id": "mythicalclustervpc",
@@ -3107,6 +2720,102 @@
                         "Ref": "AssetParametersc82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5affS3VersionKey5B5295A8"
                       }
                     }
+                  }
+                }
+              }
+            }
+          },
+          "AssetParameters": {
+            "id": "AssetParameters",
+            "path": "mythicalstack/AssetParameters",
+            "children": {
+              "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796": {
+                "id": "fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
+                "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/fcbdc6836e088c135f093165f26ac77f803a8c9d544b5fbb39e19f8e0d731796/ArtifactHash"
+                  }
+                }
+              },
+              "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff": {
+                "id": "c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
+                "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/c82ab631133fcbacba75e34003554476abe4d086d477fe4dc9c98fb25a6e5aff/ArtifactHash"
+                  }
+                }
+              },
+              "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050": {
+                "id": "2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
+                "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/2d65340a9414c04d1844e421bd328aa3b80015d6a02e74afe9a222168b2ba050/ArtifactHash"
+                  }
+                }
+              },
+              "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523": {
+                "id": "cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
+                "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/cabf9049ebef136161df1c7663e91dd4c8de0e66cd0c281b4f78db6d48d19523/ArtifactHash"
+                  }
+                }
+              },
+              "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7": {
+                "id": "457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
+                "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "mythicalstack/AssetParameters/457c8b674b9aaaf0cc8594c81e73aaf0b561c486295d99aeee526897ebe314c7/ArtifactHash"
                   }
                 }
               }

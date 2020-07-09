@@ -93,7 +93,7 @@ class MythicalStack(core.Stack):
         
         output_ddb = core.CfnOutput(
             self,
-            "mythical_table_output",
+            "mythicaltableoutput",
             export_name="MythicalTable",
             value=mythical_table.table_name,
         )
@@ -143,31 +143,38 @@ class MythicalStack(core.Stack):
             ],
         )
         
-        spa_source = s3d.Source.asset(
-          path = "../web",
-          #path="../frontend/",
-          #bundling=core.BundlingOptions(
-          #  image=core.BundlingDockerImage.from_registry("bayesimpact/react-base"),
-          #  command=["make", "build-prod-cloud"],
-          #  user="root",
-          #),
-        )
-      
-        self.spa_deployment = s3d.BucketDeployment(
-          self,
-          "spadeploy",
-          destination_bucket=mythical_bucket,
-          sources=[spa_source],
-          distribution=distribution,
-          #server_side_encryption=s3d.ServerSideEncryption.AWS_KMS,
-          #server_side_encryption_aws_kms_key_id=self.bucket_key.key_id,
-        )
+        #spa_source = s3d.Source.asset(
+        #  path = "../web",
+        #  #path="../frontend/",
+        #  #bundling=core.BundlingOptions(
+        #  #  image=core.BundlingDockerImage.from_registry("bayesimpact/react-base"),
+        #  #  command=["make", "build-prod-cloud"],
+        #  #  user="root",
+        #  #),
+        #)
+      #
+        #self.spa_deployment = s3d.BucketDeployment(
+        #  self,
+        #  "spadeploy",
+        #  destination_bucket=mythical_bucket,
+        #  sources=[spa_source],
+        #  distribution=distribution,
+        #  #server_side_encryption=s3d.ServerSideEncryption.AWS_KMS,
+        #  #server_side_encryption_aws_kms_key_id=self.bucket_key.key_id,
+        #)
         
-        output_bucket = core.CfnOutput(
+        output_cf = core.CfnOutput(
             self,
             "mythical_bucket_website",
             export_name="S3WebsiteURL",
             value=distribution.domain_name,
+        )
+        
+        output_bucket = core.CfnOutput(
+            self,
+            "mythical_bucket_output",
+            export_name="mythicalbucketoutput",
+            value=mythical_bucket.bucket_name,
         )
         
         ######## VPC ########

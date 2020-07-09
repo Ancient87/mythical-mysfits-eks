@@ -1,11 +1,11 @@
 #! /bin/bash
 
-set -eu
+#set -eu
 
 if [[ $# -eq 1 ]]; then
   BUCKET_NAME="$1"
 else
-  BUCKET_NAME=$(jq < cfn-output.json -r '.SiteBucket // empty')
+  BUCKET_NAME=$(jq < cfn-output.json -r '.mythicalbucketoutput // empty')
 fi
 
 if [[ -z $BUCKET_NAME ]]; then
@@ -13,7 +13,8 @@ if [[ -z $BUCKET_NAME ]]; then
   exit 1
 fi
 
-API_ENDPOINT=$(jq < cfn-output.json -er '.LoadBalancerDNS')
+
+API_ENDPOINT=$(jq < cfn-output.json -er '.dnsoutput')
 # For auth, not used now
 #USER_POOL_ID=$(jq < cfn-output.json -er '.UserPoolId')
 #CLIENT_ID=$(jq < cfn-output.json -er '.ClientId')
@@ -33,4 +34,5 @@ sed_prog="s|REPLACE_ME_API_ENDPOINT|http://$API_ENDPOINT|;"
 $sed_cmd -i $sed_prog $TEMP_DIR/index.html
 $sed_cmd -i $sed_prog $TEMP_DIR/register.html
 $sed_cmd -i $sed_prog $TEMP_DIR/confirm.html
-aws s3 sync $TEMP_DIR s3://$BUCKET_NAME --acl public-read
+
+aws s3 sync $TEMP_DIR s3://$BUCKET_NAME
