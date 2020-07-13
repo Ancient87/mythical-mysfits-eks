@@ -22,12 +22,21 @@ spec:
         app: mysfits
         type: monolith
     spec:
+      serviceAccountName: mythical-service-account
       containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
           image: 547168898833.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-48cgg29323mf:latest
           ports:
-            - containerPort: 8080
+            - containerPort: 80
+          env:
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
+          - name: DDB_TABLE_NAME
+            value: mythicalstack-mythicaltable33D867A5-15ITC9FYOO50
+      # Needed for IAM roles
+      securityContext:
+        fsGroup: 1337
 ---
 apiVersion: v1
 kind: Service
@@ -37,7 +46,8 @@ spec:
   type: NodePort
   selector:
     app: mysfits
+    
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      #targetPort: 8080

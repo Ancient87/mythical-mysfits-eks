@@ -8,6 +8,7 @@ else
   STACK_NAME=mythicalstack
 fi
 
+aws cloudformation describe-stacks --stack-name "$STACK_NAME" | jq -r '[.Stacks[0].Outputs[] | {key: .OutputKey, value: .OutputValue}] | from_entries' > cfn-output.json
 
 TABLE_NAME="$(jq < cfn-output.json -r '.mythicaltableoutput')"
 ECR_LIKE="$(jq < cfn-output.json -r '.likerepository')"
@@ -17,6 +18,5 @@ echo "export DDB_TABLE_NAME=$TABLE_NAME" > .environ
 echo "export ECR_MONOLITH=$ECR_MONOLITH" >> .environ
 echo "export ECR_LIKE=$ECR_LIKE" >> .environ
 echo "export AWS_DEFAULT_REGION=ap-southeast-1" >> .environ
+echo "export MM='--namespace mysfits --context mythicalcluster'" >> .environ
 
-
-aws cloudformation describe-stacks --stack-name "$STACK_NAME" | jq -r '[.Stacks[0].Outputs[] | {key: .OutputKey, value: .OutputValue}] | from_entries' > cfn-output.json

@@ -326,6 +326,8 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     <pre>
     $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION -e DDB_TABLE_NAME=$DDB_TABLE_NAME monolith-service
+    
+    $ docker run -p 8000:80 -e DDB_TABLE_NAME=$DDB_TABLE_NAME -e AWS_DEFAULT_REGION=ap-southeast-1 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN monolith-service
     </pre>
 
     *Note: You can find your DynamoDB table name in the file `workshop-1/cfn-output.json` derived from the outputs of the CloudFormation stack.*
@@ -411,9 +413,11 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Login to ECR, tag and push your container image to the monolith repository.
 
     <pre>
-    $ aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <b><i>ECR_REPOSITORY_URI</i></b>
-    $ docker tag monolith-service:latest <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:latest
+    $ aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
+    
+    $ docker tag monolith-service:latest $ECR_MONOLITH:latest
+    
+    $ docker push $ECR_MONOLITH:latest
     </pre>
 
     When you issue the push command, Docker pushes the layers up to ECR.
@@ -422,9 +426,10 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     
 
     <pre>
-    $ docker tag monolith-service:latest
-    873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    $ docker tag monolith-service:latest 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    
     $ docker push 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    
     The push refers to a repository [873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
     0f03d692d842: Pushed
     ddca409d6822: Pushed
@@ -505,13 +510,13 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
     It may looks comething like this
     <pre>
-    mythicalstack.mythicaleksclusterConfigCommand8881EF53 = aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF
+    mythicalstack.mythicaleksclusterConfigCommand8881EF53 = aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF --alias mythicalcluster
     </pre>
     
     Once done, test that it worked 
     
     ```
-    kubectl get nodes --context mythicalcluster
+    $ kubectl get nodes --context mythicalcluster
     ```
     
     Your output will look something like the following
@@ -529,15 +534,61 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     The result will be, for now, 1 pod running your container image.
 
     ```
-    kubectl apply -f app/manifests/monolith.yml --context mythicalcluster
-    kubectl get pods --namespace mysfits --watch --context mythicalcluster
+    kubectl apply -f app/manifests/monolith.yml $MM
+    kubectl get pods --namespace mysfits --watch $MM
     ```
     
     The second command will let you live observe the status of the pods rolling out.
 
-3. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
+4. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 
+    #<pre>
+    #$ kubectl expose deployment mysfits  --type=NodePort  --name=mysfits-service $MM
+    #</pre>
+    
+    First we need to determine the IP of your task. When using the "Fargate" launch type, each task gets its own ENI and Public/Private IP address. Click on the ID of the task you just launched to go to the detail page for the task. Note down the Public IP address to use with your curl command.
+
+    Note down the EXTERNAL-IP addresses displayed you will need them in the next step. Now we will try and access the service live in the cloud 
+    
     <pre>
-    kubectl expose deployment mysfits  --type=NodePort  --name=mysfits-service
-    kubectl get nodes -o wide |  awk {'print $1" " $2 " " $7'} | column -t
+    $ kubectl get nodes -o wide $MM |  awk {'print $1" " $2 " " $7'} | column -t
     </pre>
+    
+    Next we need to know the port that Kubernetes is exposing the service at. The following command will list out the port mapping. You will see something like 8080:[0-9]{5}.
+    
+    <pre>
+    $ kubectl get service/mysfits-service $MM
+    </pre>
+    
+    Using a NodePort service type the Kubernetes cluster exposes this service on ALL worker nodes on this port. This means we should be able to access this service on any worker node IP on that port
+    
+    <details>
+    <summary>INFO: What is a NodePort?</summary>
+    
+    If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767). Each node proxies that port (the same port number on every Node) into your Service. Your Service reports the allocated port in its .spec.ports[*].nodePort field.
+
+    [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+</details>
+
+    <details>
+    <summary>HINT: curl refresher</summary>
+    
+    <pre>
+    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
+    </pre>
+    
+    </details>
+
+    Uh oh. That didn't work! Why is that? The reason is that we need to manually update the worker node's security group to allow access from the Internet to this port. That doesn't seem ideal and it isn't but don't worry we will address this challenge shortly. For now, go to the EC2 console and update the security group to permit access from your current IP on the high port the service is listening on.
+    
+    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port.
+    
+    ![SecurityGroups](images/02-securitygroup.png)
+    
+    Now let's try again.
+
+    If the curl command was successful, delete the pod by going to your cluster, select the **Tasks** tab, select the running monolith task, and click **Stop**.
+
+## Lab 3 - Scale the adoption platform monolith with an ALB
+
+## Lab 4: Incrementally build and deploy each microservice using EKS

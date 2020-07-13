@@ -233,6 +233,16 @@ class MythicalStack(core.Stack):
             version=eks.KubernetesVersion.V1_16,
         )
         
+        mythical_service_account = eks.ServiceAccount(
+            self,
+            "serviceaccount",
+            cluster=mythical_eks_cluster,
+            name="mythical-service-account",
+            namespace="mysfits",
+        )
+        
+        mythical_table.grant_read_write_data(mythical_service_account.role)
+        
         mythical_eks_nodegroup = eks.Nodegroup(
             self,
             "mythicaleksnode",
