@@ -75,27 +75,34 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
     ```
     
-3.  Deploy the cloud development kit (cdk) stack to setup your workshop          environment
+3.  Deploy the cloud development kit (cdk) stack to setup your workshop environment
 
     ```
-    cd cdk
+    $ cd cdk
     ```
     
     ```
-    pip install poetry
+    $ sudo pip install poetry
     ```
     
     ```
-    poetry install
+    $ poetry install
     ```
     
     ```
-    poetry run cdk deploy
+    $ poetry run cdk bootstrap
+    ```
+    
+    ```
+    $ poetry run cdk deploy --require-approval never
     ```
 
 4. Run some additional automated setup steps with the `setup` script:
 
     ```
+    $ cd ..
+    $ export AWS_DEFAULT_REGION=ap-southeast-1
+    $ script/install_kubectl
     $ script/setup
     $ source .environ
     ```
