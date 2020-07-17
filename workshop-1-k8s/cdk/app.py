@@ -14,7 +14,7 @@ from aws_cdk import (
     aws_cloudfront as cloudfront,
 )
 import boto3
-
+import json
 import logging
 import os
 
@@ -233,6 +233,23 @@ class MythicalStack(core.Stack):
             version=eks.KubernetesVersion.V1_16,
         )
         
+        mythical_namespace_definition = {
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {
+                "name": "mysfits"
+            }
+        }
+        
+        mythical_namespace = eks.KubernetesResource(
+            self,
+            "mmns",
+            cluster=mythical_eks_cluster,
+            manifest = [
+                    mythical_namespace_definition,
+            ],
+        )
+        
         mythical_service_account = eks.ServiceAccount(
             self,
             "serviceaccount",
@@ -240,6 +257,11 @@ class MythicalStack(core.Stack):
             name="mythical-service-account",
             namespace="mysfits",
         )
+        
+        #mythical_service_account.node.default_child.addDependsOn(
+        #    mythical_namespace.node.default_child    
+        #)
+        
         
         mythical_table.grant_read_write_data(mythical_service_account.role)
         
