@@ -165,7 +165,7 @@ class MythicalStack(core.Stack):
         
         output_cf = core.CfnOutput(
             self,
-            "mythical_bucket_website",
+            "mythical_website",
             export_name="S3WebsiteURL",
             value=distribution.domain_name,
         )
@@ -180,7 +180,7 @@ class MythicalStack(core.Stack):
         output_bucket = core.CfnOutput(
             self,
             "mythical_bucket_output",
-            export_name="mythicalbucketoutput",
+            export_name="mythicalwebsite",
             value=mythical_bucket.bucket_name,
         )
         

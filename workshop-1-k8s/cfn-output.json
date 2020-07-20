@@ -1,11 +1,11 @@
 {
-  "mythicaleksclusterConfigCommand8881EF53": "aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF",
-  "likerepository": "547168898833.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-1pikpgv34lsb3",
-  "mythicalbucketwebsite": "d287wve1qzdqwu.cloudfront.net",
-  "mythicaleksclusterGetTokenCommand8AC04779": "aws eks get-token --cluster-name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF",
+  "mythicaleksclusterConfigCommand8881EF53": "aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::125963502549:role/mythicalstack-adminroleDBD57144-J73QQIWB8Z3E",
+  "likerepository": "125963502549.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-fbanmirtzqia",
+  "mythicalwebsite": "d36iomamh7l8uq.cloudfront.net",
+  "mythicaleksclusterGetTokenCommand8AC04779": "aws eks get-token --cluster-name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::125963502549:role/mythicalstack-adminroleDBD57144-J73QQIWB8Z3E",
   "mythicalekscluster": "mythical_eks_cluster",
-  "mythicaldistribution": "ESEUCL1S3COZT",
-  "mythicaltableoutput": "mythicalstack-mythicaltable33D867A5-15ITC9FYOO50",
-  "monolithrepository": "547168898833.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-48cgg29323mf",
-  "mythicalbucketoutput": "mythicalstack-mythicalbucket00734ecc-x8noeghage8d"
+  "mythicaldistribution": "E3UC2AXPJGG3NQ",
+  "mythicaltableoutput": "mythicalstack-mythicaltable33D867A5-831I9VOG3Y9P",
+  "monolithrepository": "125963502549.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-o6pdjzkwqfhs",
+  "mythicalbucketoutput": "mythicalstack-mythicalbucket00734ecc-1tlkdy316lnx1"
 }

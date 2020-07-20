@@ -40,6 +40,10 @@ Hints are also provided along the way and will look like this:
 
 *Click on the arrow to show the contents of the hint.*
 
+### IMPORTANT: Region selection
+
+We are assuming this workshop is run in the ap-southeat-1 (Singapore) region. Care has been taken to specify this along the way, but if in doubt always select this region.
+
 ### IMPORTANT: Workshop Cleanup
 
 You will be deploying infrastructure on AWS which will have an associated cost. If you're attending an AWS event, credits will be provided.  When you're done with the workshop, [follow the steps at the very end of the instructions](#workshop-cleanup) to make sure everything is cleaned up and avoid unnecessary charges.
@@ -47,8 +51,26 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 ## Let's Begin!
 
+### Workshop Setup:
 
-1. Access the AWS Cloud9 Environment created by CloudFormation:
+1. Setup your Cloud9 developer environment by launching the below stack. This will create a Cloud9 linux environment for you which you will use to complete the rest of the lab.
+
+  Click on the **Deploy to AWS** icons below to stand up the core workshop infrastructure.
+
+| Region | Launch Template |
+| ------------ | ------------- | 
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-cloud9&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml)
+
+
+2. The template will automatically bring you to the CloudFormation Dashboard and start the stack creation process in the specified region. Give the stack a name that is unique within your account, and proceed through the wizard to launch the stack. Leave all options at their default values, but make sure to check the box to allow CloudFormation to create IAM roles on your behalf:
+
+    ![IAM resources acknowledgement](images/00-cf-create.png)
+
+    See the *Events* tab for progress on the stack launch. You can also see details of any problems here if the launch fails. Proceed to the next step once the stack status advances to "CREATE_COMPLETE".
+
+
+
+3. Access the AWS Cloud9 Environment created by CloudFormation:
 
     On the AWS Console home page, type **Cloud9** into the service search bar and select it. Find the environment named like "Project-***STACK_NAME***":
 
@@ -59,12 +81,12 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
     On the left pane (Blue), any files downloaded to your environment will appear here in the file tree. In the middle (Red) pane, any documents you open will show up here. Test this out by double clicking on README.md in the left pane and edit the file by adding some arbitrary text. Then save it by clicking File and Save. Keyboard shortcuts will work as well. On the bottom, you will see a bash shell (Yellow). For the remainder of the lab, use this shell to enter all commands. You can also customize your Cloud9 environment by changing themes, moving panes around, etc. (if you like the dark theme, you can select it by clicking the gear icon in the upper right, then "Themes", and choosing the dark theme).
 
-2. Clone the Mythical Mysfits Workshop Repository:
+4. Clone the Mythical Mysfits Workshop Repository:
 
     In the bottom panel of your new Cloud9 IDE, you will see a terminal command line terminal open and ready to use.  Run the following git command in the terminal to clone the necessary code to complete this tutorial:
 
     ```
-    $ git clone https://github.com/ancient87/amazon-ecs-mythicalmysfits-workshop-eks.git
+    $ git clone https://github.com/Ancient87/mythical-mysfits-eks.git
     ```
 
     After cloning the repository, you'll see that your project explorer now includes the files cloned.
@@ -75,7 +97,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
     ```
     
-3.  Deploy the cloud development kit (cdk) stack to setup your workshop environment
+5.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
 
     ```
     $ cd cdk
@@ -97,7 +119,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ poetry run cdk deploy --require-approval never
     ```
 
-4. Run some additional automated setup steps with the `setup` script:
+6. Run some additional automated setup steps with the `setup` script:
 
     ```
     $ cd ..
@@ -108,8 +130,10 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
+    
+    The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
 
-5. Login to your container repository
+7. Login to your container repository
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
@@ -216,6 +240,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     This command needs to be run in the same directory where your Dockerfile is. **Note the trailing period** which tells the build command to look in the current directory for the Dockerfile.
 
+    Note: Make sure you're in the right directory when you do this
     <pre>
     $ docker build -t monolith-service .
     </pre>
@@ -277,20 +302,20 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Edit your Dockerfile with what you think will improve build times and compare it with the Final Dockerfile hint below.
 
 
-    #### Final Dockerfile
+    #### Final Dockerfile (as found in Dockerfile.solved)
     <details>
     <summary>HINT: Final Dockerfile</summary>
     <pre>
     FROM ubuntu:latest
     RUN apt-get update -y
-    RUN apt-get install -y python-pip python-dev build-essential
-    RUN pip install --upgrade pip
+    RUN apt-get install -y python3-pip python-dev build-essential
+    RUN pip3 install --upgrade pip
     COPY service/requirements.txt .
-    RUN pip install -r ./requirements.txt
+    RUN pip3 install --no-cache-dir -r ./requirements.txt
     COPY ./service /MythicalMysfitsService
     WORKDIR /MythicalMysfitsService
     EXPOSE 80
-    ENTRYPOINT ["python"]
+    ENTRYPOINT ["python3"]
     CMD ["mythicalMysfitsService.py"]
     </pre>
     </details>
@@ -298,7 +323,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     To see the benefit of your optimizations, you'll need to first rebuild the monolith image using your new Dockerfile (use the same build command at the beginning of step 5).  Then, introduce a change in `mythicalMysfitsService.py` (e.g. add another arbitrary comment) and rebuild the monolith image again.  Docker cached the requirements during the first rebuild after the re-ordering and references cache during this second rebuild.  You should see something similar to below:
 
     <pre>
-    Step 6/11 : RUN pip install -r ./requirements.txt
+    Step 6/11 : RUN pip3 install -r ./requirements.txt
      ---> Using cache
      ---> 612509a7a675
     Step 7/11 : COPY ./service /MythicalMysfitsService
@@ -332,8 +357,6 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Use the [docker run](https://docs.docker.com/engine/reference/run/) command to run your image; the -p flag is used to map the host listening port to the container listening port.
 
     <pre>
-    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION -e DDB_TABLE_NAME=$DDB_TABLE_NAME monolith-service
-    
     $ docker run -p 8000:80 -e DDB_TABLE_NAME=$DDB_TABLE_NAME -e AWS_DEFAULT_REGION=ap-southeast-1 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN monolith-service
     </pre>
 
@@ -372,7 +395,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     In the tab you have the running container, type **Ctrl-C** to stop the running container.  Notice, the container ran in the foreground with stdout/stderr printing to the console.  In a production environment, you would run your containers in the background and configure some logging destination.  We'll worry about logging later, but you can try running the container in the background using the -d flag.
 
     <pre>
-    $ docker run -d -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=$TABLE_NAME monolith-service
+    $ docker run -d -p 8000:80 -e DDB_TABLE_NAME=$DDB_TABLE_NAME -e AWS_DEFAULT_REGION=ap-southeast-1 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN monolith-service
     </pre>
 
     List running docker containers with the [docker ps](https://docs.docker.com/engine/reference/commandline/ps/) command to make sure the monolith is running.
@@ -419,24 +442,19 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     Login to ECR, tag and push your container image to the monolith repository.
 
-    <pre>
+    ```
     $ aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
-    
     $ docker tag monolith-service:latest $ECR_MONOLITH:latest
-    
     $ docker push $ECR_MONOLITH:latest
-    </pre>
+    ```
 
     When you issue the push command, Docker pushes the layers up to ECR.
 
     Here's sample output from these commands:
     
-
     <pre>
     $ docker tag monolith-service:latest 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    
     $ docker push 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    
     The push refers to a repository [873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
     0f03d692d842: Pushed
     ddca409d6822: Pushed
@@ -523,7 +541,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     Once done, test that it worked 
     
     ```
-    $ kubectl get nodes --context mythicalcluster
+    $ kubectl get nodes $MM
     ```
     
     Your output will look something like the following
@@ -635,7 +653,7 @@ What ties this all together is an **ECS Service**, which maintains a desired tas
 
     ![fully deployed](images/03-fully-deployed.png)
 
-    Visit the S3 static site for the Mythical Mysfits (which was empty earlier) and you should now see the page filled with Mysfits once your update is fully deployed. Remember you can access the website at <code>http://<b><i>BUCKET_NAME</i></b>.s3-website.<b><i>REGION</i></b>.amazonaws.com/</code> where the bucket name can be found in the `workshop-1/cfn-output.json` file:
+    Visit the Cloudfront static site for the Mythical Mysfits (which was empty earlier) and you should now see the page filled with Mysfits once your update is fully deployed. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file:
 
     ![the functional website](images/03-website.png)
 

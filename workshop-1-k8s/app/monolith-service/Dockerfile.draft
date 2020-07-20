@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 RUN apt-get update -y
-RUN apt-get install -y python-pip python-dev build-essential
+RUN apt-get install -y python-pip3 python-dev build-essential
 RUN pip install --upgrade pip
 #[TODO]: Copy python source files and requirements file into container image
 
