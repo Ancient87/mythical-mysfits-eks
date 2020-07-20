@@ -41,11 +41,16 @@ spec:
 ---
 apiVersion: v1
 kind: Service
+
 metadata:
   name: mysfits-service
   namespace: mysfits
+  annotations:
+    #UPDATE the spec to NLB
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
-  type: NodePort
+  # Update the spec to be of type Loadbalancer
+  type: LoadBalancer
   selector:
     app: mysfits
     

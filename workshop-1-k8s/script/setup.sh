@@ -21,10 +21,10 @@ else
   script/upload-site.sh
 fi
 
-echo "Installing ECR Cred Helper..."
+#echo "Installing ECR Cred Helper..."
 #sudo script/credhelper
 
 #echo "Attaching Instance Profile to Cloud9..."
-#script/associate-profile
+#script/associate-profile.sh
 
 echo "Success!"

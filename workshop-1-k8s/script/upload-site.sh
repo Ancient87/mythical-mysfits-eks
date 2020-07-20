@@ -15,7 +15,10 @@ if [[ -z $BUCKET_NAME ]]; then
 fi
 
 
-API_ENDPOINT=$(jq < cfn-output.json -er '.dnsoutput')
+API_ENDPOINT=$(kubectl get service/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
+
+echo $API_ENDPOINT
+
 # For auth, not used now
 #USER_POOL_ID=$(jq < cfn-output.json -er '.UserPoolId')
 #CLIENT_ID=$(jq < cfn-output.json -er '.ClientId')

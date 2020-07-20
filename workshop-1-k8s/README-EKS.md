@@ -59,7 +59,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 | Region | Launch Template |
 | ------------ | ------------- | 
-**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-cloud9&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml)
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-cloud9&templateURL=https://mythical-mysfits-bootstrap.s3.amazonaws.com/cloud9.yml)
 
 
 2. The template will automatically bring you to the CloudFormation Dashboard and start the stack creation process in the specified region. Give the stack a name that is unique within your account, and proceed through the wizard to launch the stack. Leave all options at their default values, but make sure to check the box to allow CloudFormation to create IAM roles on your behalf:
@@ -96,9 +96,29 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
     $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
     ```
-    
-5.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
 
+5.  Setup the credentials in Cloud. Run the below script to associate the instance        role 
+
+    ```
+    $ script/associate-profile.sh
+    ```
+    
+    Now you need to disable the Cloud9 temporary credentials. Click AWS Cloud9 -> preferences -> AWS Settings. Find aws managed credentials and turn it off. You can see what this looks like below.
+    
+    ![Open Cloud9 Preferences](images/00-cloud9-temp1.png)
+    
+    ![Disable temporary credentials](images/00-cloud9-temp2.png)
+    
+    Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::ACCOUNT_ID:assumed-role/<i>mysfits-cloud9-C9Role</i>-1F2WMFHBSLUSY/i-0d83a4808c97ef448". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
+    
+    ```
+    aws sts get-caller identity
+    ```
+
+6.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+
+   
+    
     ```
     $ cd cdk
     ```
@@ -146,7 +166,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
 ### Checkpoint:
-At this point, the Mythical Mysfits website should be available at the static site endpoint for the S3 bucket created by CloudFormation. You can visit the site at <code>http://<b><i>BUCKET_NAME</i></b>.s3-website.<b><i>REGION</i></b>.amazonaws.com/</code>. For your convenience, we've created a link in the CloudFormation outputs tab in the console. Alternatively, you can find the ***BUCKET_NAME*** in the CloudFormation outputs saved in the file `workshop-1/cfn-outputs.json`. ***REGION*** should be the [code](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for the region that you deployed your CloudFormation stack in (e.g. <i>us-west-2</i> for the Oregon region.) Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
 
 ![initial website](images/00-website.png)
 
@@ -529,7 +549,18 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
 1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image
 
-    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the container image definition and update the image attribute to point at the image you pushed earlier.
+    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier.
+    
+    <details>
+    <summary>HINT: Container image definition</summary>
+    
+    Each pod spec 
+    <pre>
+    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
+    </pre>
+    
+    </details>
+    
 
 2. Before we can use the Kubernetes cluster we need to setup the kubectl cli     to login to it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
 
@@ -567,10 +598,6 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
 4. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 
-    #<pre>
-    #$ kubectl expose deployment mysfits  --type=NodePort  --name=mysfits-service $MM
-    #</pre>
-    
     First we need to determine the IP of your task. When using the "Fargate" launch type, each task gets its own ENI and Public/Private IP address. Click on the ID of the task you just launched to go to the detail page for the task. Note down the Public IP address to use with your curl command.
 
     Note down the EXTERNAL-IP addresses displayed you will need them in the next step. Now we will try and access the service live in the cloud 
@@ -621,39 +648,82 @@ The Run Task method you used in the last lab is good for testing, but we need to
 
 In this lab, you will use an Elastic Load Balancing [Appliction Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/) to distribute incoming requests to your running containers. In addition to simple load balancing, this provieds capabilities like path-based routing to different services.
 
-What ties this all together is an **ECS Service**, which maintains a desired task count (i.e. n number of containers as long running processes) and integrates with the ALB (i.e. handles registration/deregistration of containers to the ALB). An initial ECS service and ALB were created for you by CloudFormation at the beginning of the workshop. In this lab, you'll update those resources to host the containerized monolith service. Later, you'll make a new service from scratch once we break apart the monolith.
+What ties this all together is a **Kubernetes Service**, which maps pods belonging together and integrates with the ALB (i.e. handles registration/deregistration of containers to the ALB). We already used a service for the last lab and NodePort is a type of service you can use. In this lab, you'll update those resources to host the containerized monolith service. Later, you'll make a new service from scratch once we break apart the monolith.
 
 ![Lab 3 Architecture](images/03-arch.png)
 
 
 ### Instructions:
 
-1. Test the placeholder service:
-
-    The CloudFormation stack you launched at the beginning of the workshop included an ALB in front of a placeholder ECS service running a simple container with the NGINX web server. Find the hostname for this ALB in the "LoadBalancerDNS" output variable in the `cfn-output.json` file, and verify that you can load the NGINX default page:
-
-    ![NGINX default page](images/03-nginx.png)
-
-
-3. Update the service to use your task definition:
-
-    Find the ECS cluster named <code>Cluster-<i><b>STACK_NAME</b></i></code>, then select the service named <code><b><i>STACK_NAME</i></b>-MythicalMonolithService-XXX</code> and click "Update" in the upper right:
-
-    ![update service](images/03-update-service.png)
+1. Update the monolith service to be of type LoadBalancer:
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
+    
+    Modify your monolith.yml service as follows
+    
+    ```
+    apiVersion: v1
+        kind: Service
 
-4. Test the functionality of the website:
+    metadata:
+        name: mysfits-service
+    annotations:
+        #UPDATE the spec to NLB
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    spec:
+        # Update the spec to be of type Loadbalancer
+        type: LoadBalancer
+    selector:
+        app: mysfits
+    
+    ports:
+        - protocol: TCP
+        port: 80
+    ```
+    
+    Then apply the changed manifest
+    
+    ```
+    kubectl apply -f app/manifests/monolith.yml $MM
+    ```
+    
+    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name.
+    
+    Type the below to see the hostname of your load balancer
+    
+    ```
+    kubectl get service/mysfits-service $MM
+    ```
+    
+    Note how the EXTERNAL-IP will now show the DNS name of your load balancer!
+    
+    ```
+    kubectl get service/mysfits-service $MM
+    NAME              TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)        AGE
+    mysfits-service   LoadBalancer   172.20.120.184   XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com   80:31601/TCP   6h2m
+    ```
+    
+    As before, try and test if this works 
+    
+    ```
+    $ curl http://<b><i>XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com</i></b>:80/mysfits
+    ```
+    
+    If this works we are now ready to fix the website.
 
-    You can monitor the progress of the deployment on the "Tasks" tab of the service page:
+4. Fix the website:
 
-    ![monitoring the update](images/03-deployment.png)
-
-    The update is fully deployed once there is just one instance of the Task running the latest revision:
-
-    ![fully deployed](images/03-fully-deployed.png)
-
-    Visit the Cloudfront static site for the Mythical Mysfits (which was empty earlier) and you should now see the page filled with Mysfits once your update is fully deployed. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file:
+    If you recall, visiting the Cloudfront static site for the Mythical Mysfits is currently empty. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
+    
+    We have provided a script to update the website with the mysfits service load balancer name and to redeploy. Execute this now
+    
+    ```
+    $ script/upload-site.sh  
+    ```
+    
+    This script will dynamically fill in the DNS name of the load balancer and re-upload the files.
+    
+    After a few minutes you should be able to access the now working website.
 
     ![the functional website](images/03-website.png)
 
@@ -661,28 +731,32 @@ What ties this all together is an **ECS Service**, which maintains a desired tas
 
     ![like functionality](images/03-like-count.png)
 
-    This ensures that the monolith can read from and write to DynamoDB, and that it can process likes. Check the CloudWatch logs from ECS and ensure that you can see the "Like processed." message in the logs:
+    This ensures that the monolith can read from and write to DynamoDB, and that it can process likes. Check the logs of your monolith pods and ensure that you can see the "Like processed." message in the logs:
 
-    ![like logs](images/03-like-processed.png)
+    ```
+    $ kubectl logs -l app=mysfits --tail 1 $MM --follow
+    ```
+    
+    ```
+    Like processed.
+    10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
+    INFO:werkzeug:10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
+    ```
 
 <details>
-<summary>INFO: What is a service and how does it differ from a task??</summary>
+<summary>INFO: What is a load balanced service and how does it differ from a Node Port??</summary>
 
-An [ECS service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) is a concept where ECS allows you to run and maintain a specified number (the "desired count") of instances of a task definition simultaneously in an ECS cluster.
-
-
-tl;dr a **Service** is comprised of multiple **tasks** and will keep them up and running. See the link above for more detail.
+A service of type loabdlancer is where Kubernetes deploys a ELB in front of the service's node port and creates target groups pointed at them.
 
 </details>
 
 ### Checkpoint:
-Sweet! Now you have a load-balanced ECS service managing your containerized Mythical Mysfits application. It's still a single monolith container, but we'll work on breaking it down next.
+Sweet! Now you have a load-balanced Kubernetes service managing your containerized Mythical Mysfits application. It's still a single monolith container, but we'll work on breaking it down next.
 
 [*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
 
 
 ## Lab 4: Incrementally build and deploy each microservice using EKS
-
 
 It's time to break apart the monolithic adoption into microservices. To help with this, let's see how the monolith works in more detail.
 
