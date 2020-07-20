@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mysfits
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysfits
+  namespace: mysfits
+spec:
+  # Change Me to scale
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysfits
+      type: monolith
+  template:
+    metadata:
+      labels:
+        app: mysfits
+        type: monolith
+    spec:
+      serviceAccountName: mythical-service-account
+      containers:
+        - name: mysfits-monolith
+          #UPDATE REPO AND VERSION HERE
+          image: VALUE_OF_ECR_MONOLITH_VARIABLE:latest
+          ports:
+            - containerPort: 80
+          env:
+          #UPDATE REGION AND TABLE HERE!
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
+          - name: DDB_TABLE_NAME
+            value: YOUR_TABLE_NAME
+      # Needed for IAM roles
+      securityContext:
+        fsGroup: 1337
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysfits-service
+spec:
+  type: NodePort
+  selector:
+    app: mysfits
+    
+  ports:
+    - protocol: TCP
+      port: 80
