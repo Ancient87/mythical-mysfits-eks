@@ -1,4 +1,4 @@
-Monolith to Microservices with Docker and AWS Fargate
+Monolith to Microservices with Docker and AWS EKS
 ====================================================
 
 Welcome to the Mythical Mysfits team!
@@ -15,13 +15,9 @@ In this lab, you'll build the monolithic Mythical Mysfits adoption platform with
 
 These labs are designed to be completed in sequence, and the full set of instructions are documented below.  Read and follow along to complete the labs.  If you're at a live AWS event, the workshop staff will give you a high-level overview of the labs and help answer any questions.  Don't worry if you get stuck, we provide hints along the way.
 
-
 * **Workshop Setup:** [Setup working environment on AWS](#lets-begin)
 * **Lab 1:** [Containerize the Mythical Mysfits monolith](#lab-1---containerize-the-mythical-mysfits-adoption-agency-platform)
-* **Lab 2:** [Deploy the container using AWS Fargate](#lab-2---deploy-your-container-using-ecrecs)
-* **Lab 3:** [Scale the adoption platform monolith with an ALB and an ECS Service](#lab-3---scale-the-adoption-platform-monolith-with-an-alb)
-* **Lab 4:** [Incrementally build and deploy more microservices with AWS Fargate](#lab-4-incrementally-build-and-deploy-each-microservice-using-fargate)
-* **Cleanup** [Put everything away nicely](#workshop-cleanup)
+
 
 ### Conventions:
 
@@ -44,6 +40,10 @@ Hints are also provided along the way and will look like this:
 
 *Click on the arrow to show the contents of the hint.*
 
+### IMPORTANT: Region selection
+
+We are assuming this workshop is run in the ap-southeat-1 (Singapore) region. Care has been taken to specify this along the way, but if in doubt always select this region.
+
 ### IMPORTANT: Workshop Cleanup
 
 You will be deploying infrastructure on AWS which will have an associated cost. If you're attending an AWS event, credits will be provided.  When you're done with the workshop, [follow the steps at the very end of the instructions](#workshop-cleanup) to make sure everything is cleaned up and avoid unnecessary charges.
@@ -53,16 +53,13 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 ### Workshop Setup:
 
-1. Open the CloudFormation launch template link below in a new tab. The link will load the CloudFormation Dashboard and start the stack creation process in the chosen region:
-   
-    Click on one of the **Deploy to AWS** icons below to region to stand up the core workshop infrastructure.
+1. Setup your Cloud9 developer environment by launching the below stack. This will create a Cloud9 linux environment for you which you will use to complete the rest of the lab.
+
+  Click on the **Deploy to AWS** icons below to stand up the core workshop infrastructure.
 
 | Region | Launch Template |
 | ------------ | ------------- | 
-**Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mysfits-fargate&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml)  
-**Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mysfits-fargate&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml)  
-**Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mysfits-fargate&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml) 
-**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-fargate&templateURL=https://s3.amazonaws.com/mythical-mysfits-website/fargate/core.yml)
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-cloud9&templateURL=https://mythical-mysfits-bootstrap.s3.amazonaws.com/cloud9.yml)
 
 
 2. The template will automatically bring you to the CloudFormation Dashboard and start the stack creation process in the specified region. Give the stack a name that is unique within your account, and proceed through the wizard to launch the stack. Leave all options at their default values, but make sure to check the box to allow CloudFormation to create IAM roles on your behalf:
@@ -70,6 +67,8 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ![IAM resources acknowledgement](images/00-cf-create.png)
 
     See the *Events* tab for progress on the stack launch. You can also see details of any problems here if the launch fails. Proceed to the next step once the stack status advances to "CREATE_COMPLETE".
+
+
 
 3. Access the AWS Cloud9 Environment created by CloudFormation:
 
@@ -87,7 +86,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     In the bottom panel of your new Cloud9 IDE, you will see a terminal command line terminal open and ready to use.  Run the following git command in the terminal to clone the necessary code to complete this tutorial:
 
     ```
-    $ git clone https://github.com/aws-samples/amazon-ecs-mythicalmysfits-workshop.git
+    $ git clone https://github.com/Ancient87/mythical-mysfits-eks.git
     ```
 
     After cloning the repository, you'll see that your project explorer now includes the files cloned.
@@ -95,20 +94,79 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     In the terminal, change directory to the subdirectory for this workshop in the repo:
 
     ```
-    $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1
+    $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
     ```
 
-5. Run some additional automated setup steps with the `setup` script:
+5.  Setup the credentials in Cloud. Run the below script to associate the instance        role 
 
     ```
+    $ script/associate-profile.sh
+    ```
+    
+    Now you need to disable the Cloud9 temporary credentials. Click AWS Cloud9 -> preferences -> AWS Settings. Find aws managed credentials and turn it off. You can see what this looks like below.
+    
+    ![Open Cloud9 Preferences](images/00-cloud9-temp1.png)
+    
+    ![Disable temporary credentials](images/00-cloud9-temp2.png)
+    
+    Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::ACCOUNT_ID:assumed-role/<i>mysfits-cloud9-C9Role</i>-1F2WMFHBSLUSY/i-0d83a4808c97ef448". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
+    
+    ```
+    aws sts get-caller identity
+    ```
+
+6.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+
+   
+    
+    ```
+    $ cd cdk
+    ```
+    
+    ```
+    $ sudo pip install poetry
+    ```
+    
+    ```
+    $ poetry install
+    ```
+    
+    ```
+    $ poetry run cdk bootstrap
+    ```
+    
+    ```
+    $ poetry run cdk deploy --require-approval never
+    ```
+
+6. Run some additional automated setup steps with the `setup` script:
+
+    ```
+    $ cd ..
+    $ export AWS_DEFAULT_REGION=ap-southeast-1
+    $ script/install_kubectl
     $ script/setup
+    $ source .environ
     ```
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
+    
+    The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
 
+7. Login to your container repository
+
+    ```
+    aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
+    ```
+    
+    You should see 
+    
+    ```
+    Login Succeeded
+    ```
 
 ### Checkpoint:
-At this point, the Mythical Mysfits website should be available at the static site endpoint for the S3 bucket created by CloudFormation. You can visit the site at <code>http://<b><i>BUCKET_NAME</i></b>.s3-website.<b><i>REGION</i></b>.amazonaws.com/</code>. For your convenience, we've created a link in the CloudFormation outputs tab in the console. Alternatively, you can find the ***BUCKET_NAME*** in the CloudFormation outputs saved in the file `workshop-1/cfn-outputs.json`. ***REGION*** should be the [code](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for the region that you deployed your CloudFormation stack in (e.g. <i>us-west-2</i> for the Oregon region.) Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
 
 ![initial website](images/00-website.png)
 
@@ -116,6 +174,8 @@ At this point, the Mythical Mysfits website should be available at the static si
 
 
 ## Lab 1 - Containerize the Mythical Mysfits adoption agency platform
+
+
 
 The Mythical Mysfits adoption agency infrastructure has always been running directly on EC2 VMs. Our first step will be to modernize how our code is packaged by containerizing the current Mythical Mysfits adoption platform, which we'll also refer to as the monolith application.  To do this, you will create a [Dockerfile](https://docs.docker.com/engine/reference/builder/), which is essentially a recipe for [Docker](https://aws.amazon.com/docker) to build a container image.  You'll use your [AWS Cloud9](https://aws.amazon.com/cloud9/) development environment to author the Dockerfile, build the container image, and run it to confirm it's able to process adoptions.
 
@@ -200,6 +260,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     This command needs to be run in the same directory where your Dockerfile is. **Note the trailing period** which tells the build command to look in the current directory for the Dockerfile.
 
+    Note: Make sure you're in the right directory when you do this
     <pre>
     $ docker build -t monolith-service .
     </pre>
@@ -261,20 +322,20 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Edit your Dockerfile with what you think will improve build times and compare it with the Final Dockerfile hint below.
 
 
-    #### Final Dockerfile
+    #### Final Dockerfile (as found in Dockerfile.solved)
     <details>
     <summary>HINT: Final Dockerfile</summary>
     <pre>
     FROM ubuntu:latest
     RUN apt-get update -y
-    RUN apt-get install -y python-pip python-dev build-essential
-    RUN pip install --upgrade pip
+    RUN apt-get install -y python3-pip python-dev build-essential
+    RUN pip3 install --upgrade pip
     COPY service/requirements.txt .
-    RUN pip install -r ./requirements.txt
+    RUN pip3 install --no-cache-dir -r ./requirements.txt
     COPY ./service /MythicalMysfitsService
     WORKDIR /MythicalMysfitsService
     EXPOSE 80
-    ENTRYPOINT ["python"]
+    ENTRYPOINT ["python3"]
     CMD ["mythicalMysfitsService.py"]
     </pre>
     </details>
@@ -282,7 +343,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     To see the benefit of your optimizations, you'll need to first rebuild the monolith image using your new Dockerfile (use the same build command at the beginning of step 5).  Then, introduce a change in `mythicalMysfitsService.py` (e.g. add another arbitrary comment) and rebuild the monolith image again.  Docker cached the requirements during the first rebuild after the re-ordering and references cache during this second rebuild.  You should see something similar to below:
 
     <pre>
-    Step 6/11 : RUN pip install -r ./requirements.txt
+    Step 6/11 : RUN pip3 install -r ./requirements.txt
      ---> Using cache
      ---> 612509a7a675
     Step 7/11 : COPY ./service /MythicalMysfitsService
@@ -316,7 +377,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Use the [docker run](https://docs.docker.com/engine/reference/run/) command to run your image; the -p flag is used to map the host listening port to the container listening port.
 
     <pre>
-    $ docker run -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=<b><i>TABLE_NAME</i></b> monolith-service
+    $ docker run -p 8000:80 -e DDB_TABLE_NAME=$DDB_TABLE_NAME -e AWS_DEFAULT_REGION=ap-southeast-1 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN monolith-service
     </pre>
 
     *Note: You can find your DynamoDB table name in the file `workshop-1/cfn-output.json` derived from the outputs of the CloudFormation stack.*
@@ -354,7 +415,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     In the tab you have the running container, type **Ctrl-C** to stop the running container.  Notice, the container ran in the foreground with stdout/stderr printing to the console.  In a production environment, you would run your containers in the background and configure some logging destination.  We'll worry about logging later, but you can try running the container in the background using the -d flag.
 
     <pre>
-    $ docker run -d -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REGION</i></b> -e DDB_TABLE_NAME=<b><i>TABLE_NAME</i></b> monolith-service
+    $ docker run -d -p 8000:80 -e DDB_TABLE_NAME=$DDB_TABLE_NAME -e AWS_DEFAULT_REGION=ap-southeast-1 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN monolith-service
     </pre>
 
     List running docker containers with the [docker ps](https://docs.docker.com/engine/reference/commandline/ps/) command to make sure the monolith is running.
@@ -399,17 +460,18 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     *Note: Your repository URI will be unique.*
 
-    Tag and push your container image to the monolith repository.
+    Login to ECR, tag and push your container image to the monolith repository.
 
-    <pre>
-    $ docker tag monolith-service:latest <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    </pre>
+    ```
+    $ aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
+    $ docker tag monolith-service:latest $ECR_MONOLITH:latest
+    $ docker push $ECR_MONOLITH:latest
+    ```
 
     When you issue the push command, Docker pushes the layers up to ECR.
 
     Here's sample output from these commands:
-
+    
     <pre>
     $ docker tag monolith-service:latest 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
     $ docker push 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
@@ -442,144 +504,226 @@ At this point, you should have a working container for the monolith codebase sto
 
 [*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
 
-## Lab 2 - Deploy your container using ECR/ECS
+## Lab 2 - Deploy your container using ECR/EKS
 
-Deploying individual containers is not difficult.  However, when you need to coordinate many container deployments, a container management tool like ECS can greatly simplify the task (no pun intended).
+Deploying individual containers is not difficult.  However, when you need to coordinate many container deployments, a container management tool like Kubernetes can greatly simplify this.
 
-ECS refers to a JSON formatted template called a [Task Definition](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html) that describes one or more containers making up your application or service.  The task definition is the recipe that ECS uses to run your containers as a **task** on your EC2 instances or AWS Fargate.
+Kubernetes refers to a YAML formatted template called a [Manifest](https://kubernetes.io/docs/reference/glossary/?all=true#term-manifest) that describes one or more resources making up your application and service. The manifest is the recipe that Kubernetes uses to run your containers as a **pod** on your Kubernetes worker nodes.
 
 <details>
-<summary>INFO: What is a task?</summary>
-A task is a running set of containers on a single host. You may hear or see 'task' and 'container' used interchangeably. Often, we refer to tasks instead of containers because a task is the unit of work that ECS launches and manages on your cluster. A task can be a single container, or multiple containers that run together.
+<summary>INFO: What is a pod?</summary>
+A Pod (as in a pod of whales or pea pod) is a group of one or more containers (such as Docker containers), with shared storage/network, and a specification for how to run the containers. A Pod's contents are always co-located and co-scheduled, and run in a shared context. A Pod models an application-specific "logical host" - it contains one or more application containers which are relatively tightly coupled — in a pre-container world, being executed on the same physical or virtual machine would mean being executed on the same logical host.
 
-Fun fact: a task is very similar to a Kubernetes 'pod'.
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/)
+
+
+![Pods](images/05-pod.svg)
+
 </details>
 
-Most task definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
+<details>
+<summary>INFO: What is a deployment?</summary>
+A Deployment provides declarative updates for Pods and ReplicaSets.
 
-In this lab, you will create a task definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with ECS. You will be using the [Fargate](https://aws.amazon.com/fargate/) launch type, which let's you run containers without having to manage servers or other infrastructure. Fargate containers launch with a networking mode called [awsvpc](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html), which gives ECS tasks the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
+You describe a desired state in a Deployment, and the Deployment Controller changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.
+
+[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+
+
+![Pods](images/05-pod.svg)
+
+</details>
+
+Containter definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
+
+In this lab, you will create a pod and deployment definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with Kubernetes. You will be using a managed worker node group in this setup.
+
+EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
+
+#TODO: Change image for EKS
 
 ![Lab 2 Architecture](images/02-arch.png)
 
-*Note: You will use the AWS Management Console for this lab, but remember that you can programmatically accomplish the same thing using the AWS CLI, SDKs, or CloudFormation.*
-
 ### Instructions:
 
-1. Create an ECS task definition that describes what is needed to run the monolith.
 
-    The CloudFormation template you ran at the beginning of the workshop created some placeholder ECS resources running a simple "Hello World" NGINX container. (You can see this running now at the public endpoint for the ALB also created by CloudFormation available in `cfn-output.json`.) We'll begin to adapt this placeholder infrastructure to run the monolith by creating a new "Task Definition" referencing the container built in the previous lab.
+1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image
 
-    In the AWS Management Console, navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard. Find the Task Definition named <code>Monolith-Definition-<b><i>STACK_NAME</i></b></code>, select it, and click "Create new revision". Select the "monolith-service" container under "Container Definitions", and update "Image" to point to the Image URI of the monolith container that you just pushed to ECR (something like `018782361163.dkr.ecr.us-east-1.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest`).
+    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier.
+    
+    <details>
+    <summary>HINT: Container image definition</summary>
+    
+    Each pod spec 
+    <pre>
+    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
+    </pre>
+    
+    </details>
+    
 
-    ![Edit container example](images/02-task-def-edit-container.png)
+2. Before we can use the Kubernetes cluster we need to setup the kubectl cli     to login to it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
 
-2. Check the CloudWatch logging settings in the container definition.
+    It may looks comething like this
+    <pre>
+    mythicalstack.mythicaleksclusterConfigCommand8881EF53 = aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF --alias mythicalcluster
+    </pre>
+    
+    Once done, test that it worked 
+    
+    ```
+    $ kubectl get nodes $MM
+    ```
+    
+    Your output will look something like the following
+    
+    <pre>
+    NAME                                            STATUS   ROLES    AGE     VERSION
+    ip-10-0-48-4.ap-southeast-1.compute.internal    Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
+    ip-10-0-66-62.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
+    ip-10-0-95-74.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
+    </pre>
 
-    In the previous lab, you attached to the running container to get *stdout*, but no one should be doing that in production and it's good operational practice to implement a centralized logging solution.  ECS offers integration with [CloudWatch logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html) through an awslogs driver that can be enabled in the container definition.
+3. Once this is set we can deploy to Kubernetes
+    
+    The following command apply the manifest definition to Kuberntes.
+    The result will be, for now, 1 pod running your container image.
 
-    Verify that under "Storage and Logging", the "log driver" is set to "awslogs".
+    ```
+    kubectl apply -f app/manifests/monolith.yml $MM
+    kubectl get pods --namespace mysfits --watch $MM
+    ```
+    
+    The second command will let you live observe the status of the pods rolling out.
 
-    The Log configuration should look something like this:
-
-    ![CloudWatch Logs integration](images/02-awslogs.png)
-
-    Click "Update" to save the container settings and then "Create" to create the Task Definition revision.
-
-3. Run the task definition using the [Run Task](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_run_task.html) method.
-
-    You should be at the task definition view where you can do things like create a new revision or invoke certain actions.  In the **Actions** dropdown, select **Run Task** to launch your container.
-
-    ![Run Task](images/02-run-task.png)
-
-    Configure the following fields:
-
-    * **Launch Type** - select **Fargate**
-    * **Cluster** - select your workshop cluster from the dropdown menu
-    * **Task Definition** - select the task definition you created from the dropdown menu
-
-    In the "VPC and security groups" section, enter the following:
-
-    * **Cluster VPC** - Your workshop VPC, named like <code>Mysfits-VPC-<b><i>STACK_NAME</i></b></code>
-    * **Subnets** - Select a public subnet, such as <code>Mysfits-PublicOne-<b><i>STACK_NAME</i></b></code>
-    * **Security goups** - The default is fine, but you can confirm that it allows inbound traffic on port 80
-    * **Auto-assign public IP** - "ENABLED"
-
-    Leave all remaining fields as their defaults and click **Run Task**.
-
-    You'll see the task start in the **PENDING** state (the placeholder NGINX task is still running as well).
-
-    ![Task state](images/02-task-pending.png)
-
-    In a few seconds, click on the refresh button until the task changes to a **RUNNING** state.
-
-    ![Task state](images/02-task-running.png)
-
-4. Test the running task by using cURL from your Cloud9 environment to send a simple GET request.
+4. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 
     First we need to determine the IP of your task. When using the "Fargate" launch type, each task gets its own ENI and Public/Private IP address. Click on the ID of the task you just launched to go to the detail page for the task. Note down the Public IP address to use with your curl command.
 
+    Note down the EXTERNAL-IP addresses displayed you will need them in the next step. Now we will try and access the service live in the cloud 
+    
+    <pre>
+    $ kubectl get nodes -o wide $MM |  awk {'print $1" " $2 " " $7'} | column -t
+    </pre>
+    
+    Next we need to know the port that Kubernetes is exposing the service at. The following command will list out the port mapping. You will see something like 8080:[0-9]{5}.
+    
+    <pre>
+    $ kubectl get service/mysfits-service $MM
+    </pre>
+    
+    Using a NodePort service type the Kubernetes cluster exposes this service on ALL worker nodes on this port. This means we should be able to access this service on any worker node IP on that port
+    
+    <details>
+    <summary>INFO: What is a NodePort?</summary>
+    
+    If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767). Each node proxies that port (the same port number on every Node) into your Service. Your Service reports the allocated port in its .spec.ports[*].nodePort field.
 
-    ![Container Instance IP](images/02-public-IP.png)
-
-    Run the same curl command as before (or view the endpoint in your browser) and ensure that you get a list of Mysfits in the response.
+    [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
+</details>
 
     <details>
     <summary>HINT: curl refresher</summary>
+    
     <pre>
-    $ curl http://<b><i>TASK_PUBLIC_IP_ADDRESS</i></b>/mysfits
+    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
     </pre>
+    
     </details>
 
-    Navigate to the [CloudWatch Logs dashboard](https://console.aws.amazon.com/cloudwatch/home#logs:), and click on the monolith log group (e.g.: `mysfits-MythicalMonolithLogGroup-LVZJ0H2I2N4`).  Logging statements are written to log streams within the log group.  Click on the most recent log stream to view the logs.  The output should look very familiar from your testing in Lab 1.
+    Uh oh. That didn't work! Why is that? The reason is that we need to manually update the worker node's security group to allow access from the Internet to this port. That doesn't seem ideal and it isn't but don't worry we will address this challenge shortly. For now, go to the EC2 console and update the security group to permit access from your current IP on the high port the service is listening on.
+    
+    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port.
+    
+    ![SecurityGroups](images/02-securitygroup.png)
+    
+    Now let's try again.
 
-    ![CloudWatch Log Entries](images/02-cloudwatch-logs.png)
-
-    If the curl command was successful, stop the task by going to your cluster, select the **Tasks** tab, select the running monolith task, and click **Stop**.
-
-### Checkpoint:
-Nice work!  You've created a task definition and are able to deploy the monolith container using ECS.  You've also enabled logging to CloudWatch Logs, so you can verify your container works as expected.
-
-[*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
+    If the curl command was successful, we are now ready to scale the service
 
 ## Lab 3 - Scale the adoption platform monolith with an ALB
+
 
 The Run Task method you used in the last lab is good for testing, but we need to run the adoption platform as a long running process.
 
 In this lab, you will use an Elastic Load Balancing [Appliction Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/) to distribute incoming requests to your running containers. In addition to simple load balancing, this provieds capabilities like path-based routing to different services.
 
-What ties this all together is an **ECS Service**, which maintains a desired task count (i.e. n number of containers as long running processes) and integrates with the ALB (i.e. handles registration/deregistration of containers to the ALB). An initial ECS service and ALB were created for you by CloudFormation at the beginning of the workshop. In this lab, you'll update those resources to host the containerized monolith service. Later, you'll make a new service from scratch once we break apart the monolith.
+What ties this all together is a **Kubernetes Service**, which maps pods belonging together and integrates with the ALB (i.e. handles registration/deregistration of containers to the ALB). We already used a service for the last lab and NodePort is a type of service you can use. In this lab, you'll update those resources to host the containerized monolith service. Later, you'll make a new service from scratch once we break apart the monolith.
 
 ![Lab 3 Architecture](images/03-arch.png)
 
 
 ### Instructions:
 
-1. Test the placeholder service:
-
-    The CloudFormation stack you launched at the beginning of the workshop included an ALB in front of a placeholder ECS service running a simple container with the NGINX web server. Find the hostname for this ALB in the "LoadBalancerDNS" output variable in the `cfn-output.json` file, and verify that you can load the NGINX default page:
-
-    ![NGINX default page](images/03-nginx.png)
-
-
-3. Update the service to use your task definition:
-
-    Find the ECS cluster named <code>Cluster-<i><b>STACK_NAME</b></i></code>, then select the service named <code><b><i>STACK_NAME</i></b>-MythicalMonolithService-XXX</code> and click "Update" in the upper right:
-
-    ![update service](images/03-update-service.png)
+1. Update the monolith service to be of type LoadBalancer:
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
+    
+    Modify your monolith.yml service as follows
+    
+    ```
+    apiVersion: v1
+        kind: Service
 
-4. Test the functionality of the website:
+    metadata:
+        name: mysfits-service
+    annotations:
+        #UPDATE the spec to NLB
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    spec:
+        # Update the spec to be of type Loadbalancer
+        type: LoadBalancer
+    selector:
+        app: mysfits
+    
+    ports:
+        - protocol: TCP
+        port: 80
+    ```
+    
+    Then apply the changed manifest
+    
+    ```
+    kubectl apply -f app/manifests/monolith.yml $MM
+    ```
+    
+    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name.
+    
+    Type the below to see the hostname of your load balancer
+    
+    ```
+    kubectl get service/mysfits-service $MM
+    ```
+    
+    Note how the EXTERNAL-IP will now show the DNS name of your load balancer!
+    
+    ```
+    kubectl get service/mysfits-service $MM
+    NAME              TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)        AGE
+    mysfits-service   LoadBalancer   172.20.120.184   XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com   80:31601/TCP   6h2m
+    ```
+    
+    As before, try and test if this works 
+    
+    ```
+    $ curl http://<b><i>XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com</i></b>:80/mysfits
+    ```
+    
+    If this works we are now ready to fix the website.
 
-    You can monitor the progress of the deployment on the "Tasks" tab of the service page:
+4. Fix the website:
 
-    ![monitoring the update](images/03-deployment.png)
-
-    The update is fully deployed once there is just one instance of the Task running the latest revision:
-
-    ![fully deployed](images/03-fully-deployed.png)
-
-    Visit the S3 static site for the Mythical Mysfits (which was empty earlier) and you should now see the page filled with Mysfits once your update is fully deployed. Remember you can access the website at <code>http://<b><i>BUCKET_NAME</i></b>.s3-website.<b><i>REGION</i></b>.amazonaws.com/</code> where the bucket name can be found in the `workshop-1/cfn-output.json` file:
+    If you recall, visiting the Cloudfront static site for the Mythical Mysfits is currently empty. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
+    
+    We have provided a script to update the website with the mysfits service load balancer name and to redeploy. Execute this now
+    
+    ```
+    $ script/upload-site.sh  
+    ```
+    
+    This script will dynamically fill in the DNS name of the load balancer and re-upload the files.
+    
+    After a few minutes you should be able to access the now working website.
 
     ![the functional website](images/03-website.png)
 
@@ -587,26 +731,32 @@ What ties this all together is an **ECS Service**, which maintains a desired tas
 
     ![like functionality](images/03-like-count.png)
 
-    This ensures that the monolith can read from and write to DynamoDB, and that it can process likes. Check the CloudWatch logs from ECS and ensure that you can see the "Like processed." message in the logs:
+    This ensures that the monolith can read from and write to DynamoDB, and that it can process likes. Check the logs of your monolith pods and ensure that you can see the "Like processed." message in the logs:
 
-    ![like logs](images/03-like-processed.png)
+    ```
+    $ kubectl logs -l app=mysfits --tail 1 $MM --follow
+    ```
+    
+    ```
+    Like processed.
+    10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
+    INFO:werkzeug:10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
+    ```
 
 <details>
-<summary>INFO: What is a service and how does it differ from a task??</summary>
+<summary>INFO: What is a load balanced service and how does it differ from a Node Port??</summary>
 
-An [ECS service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) is a concept where ECS allows you to run and maintain a specified number (the "desired count") of instances of a task definition simultaneously in an ECS cluster.
-
-
-tl;dr a **Service** is comprised of multiple **tasks** and will keep them up and running. See the link above for more detail.
+A service of type loabdlancer is where Kubernetes deploys a ELB in front of the service's node port and creates target groups pointed at them.
 
 </details>
 
 ### Checkpoint:
-Sweet! Now you have a load-balanced ECS service managing your containerized Mythical Mysfits application. It's still a single monolith container, but we'll work on breaking it down next.
+Sweet! Now you have a load-balanced Kubernetes service managing your containerized Mythical Mysfits application. It's still a single monolith container, but we'll work on breaking it down next.
 
 [*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
 
-## Lab 4: Incrementally build and deploy each microservice using Fargate
+
+## Lab 4: Incrementally build and deploy each microservice using EKS
 
 It's time to break apart the monolithic adoption into microservices. To help with this, let's see how the monolith works in more detail.
 
@@ -813,7 +963,7 @@ As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/)
 
     ![ECR nolike image](images/04-ecr-nolike2.png)
 
-10. Now make one last Task Definition for the monolith to refer to this new container image URI (this process should be familiar now, and you can probably see that it makes sense to leave this drudgery to a CI/CD service in production), update the monolith service to use the new Task Definition, and make sure the app still functions as before.
+10. Now make one additional Deployment Definition for the monolith to refer to this new container image URI (this process should be familiar now, and you can probably see that it makes sense to leave this drudgery to a CI/CD service in production), update the monolith service to use the new Task Definition, and make sure the app still functions as before.
 
 ### Checkpoint:
 Congratulations, you've successfully rolled out the like microservice from the monolith.  If you have time, try repeating this lab to break out the adoption microservice.  Otherwise, please remember to follow the steps below in the **Workshop Cleanup** to make sure all assets created during the workshop are removed so you do not see unexpected charges after today.
@@ -824,9 +974,7 @@ This is really important because if you leave stuff running in your account, it 
 
 Delete manually created resources throughout the labs:
 
-* ECS service(s) - first update the desired task count to be 0.  Then delete the ECS service itself.
 * ECR - delete any Docker images pushed to your ECR repository.
 * CloudWatch logs groups
-* ALBs and associated target groups
 
 Finally, [delete the CloudFormation stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
