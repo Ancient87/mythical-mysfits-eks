@@ -3,17 +3,25 @@
 #set -eu
 
 if [[ $# -eq 1 ]]; then
+  STACK_NAME=$#
+else
+  STACK_NAME=mythicaldistributionstack
+fi
+
+aws cloudformation describe-stacks --stack-name "$STACK_NAME" | jq -r '[.Stacks[0].Outputs[] | {key: .OutputKey, value: .OutputValue}] | from_entries' > cfn-dist-output.json
+
+if [[ $# -eq 1 ]]; then
   BUCKET_NAME="$1"
 else
-  BUCKET_NAME=$(jq < cfn-output.json -r '.mythicalbucketoutput // empty')
-  DISTRIBUTION_ID=$(jq < cfn-output.json -r '.mythicaldistribution // empty')
+  BUCKET_NAME=$(jq < cfn-dist-output.json -r '.mythicalbucketoutput // empty')
 fi
+
+DISTRIBUTION_ID=$(jq < cfn-dist-output.json -r '.mythicaldistribution // empty')
 
 if [[ -z $BUCKET_NAME ]]; then
   echo "Unable to determine S3 bucket to use. Ensure that it is returned as an output from CloudFormation or passed as the first argument to the script."
   exit 1
 fi
-
 
 API_ENDPOINT=$(kubectl get service/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
 

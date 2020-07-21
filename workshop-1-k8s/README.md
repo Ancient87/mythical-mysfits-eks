@@ -17,7 +17,9 @@ These labs are designed to be completed in sequence, and the full set of instruc
 
 * **Workshop Setup:** [Setup working environment on AWS](#lets-begin)
 * **Lab 1:** [Containerize the Mythical Mysfits monolith](#lab-1---containerize-the-mythical-mysfits-adoption-agency-platform)
-
+* **Lab 2:** [Deploy the Mythical Mysfits monolith to Kubernetes](#lab-2---deploy-the-mythical-mysfits-adoption-agency-platform)
+* **Lab 3:** [Scale the Mythical Mysfits monolith on Kubernetes](#lab-3---scale-the-mythical-mysfits-adoption-agency-platform)
+* **Lab 4:** [Carve out the Mythical Mysfits monolith microservices on Kubernetes](#lab-4---scale-the-mythical-mysfits-adoption-agency-platform)
 
 ### Conventions:
 
@@ -115,13 +117,14 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     aws sts get-caller identity
     ```
 
-6.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+6. Prepre the IAC provider
 
-   
-    
+     
     ```
     $ cd cdk
     ```
+    
+    Install the dependency manager and dependencies
     
     ```
     $ sudo pip install poetry
@@ -131,20 +134,33 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ poetry install
     ```
     
+    Bootstrap your environment
+    
     ```
     $ poetry run cdk bootstrap
     ```
+
+7. A kick-off deployment of the website <b>Step 7 and 8 are to be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
     
     ```
-    $ poetry run cdk deploy --require-approval never
+    $ poetry run cdk deploy mythicaldistributionstack --require-approval never
     ```
 
-6. Run some additional automated setup steps with the `setup` script:
+8.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+
+    Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break. <b>Once step 8 is complete you can move on </b>
+    
+    ```
+    $ poetry run cdk deploy mythicalstack --require-approval never
+    ```
+    
+
+9. Run some additional automated setup steps with the `setup` script:
 
     ```
     $ cd ..
     $ export AWS_DEFAULT_REGION=ap-southeast-1
-    $ script/install_kubectl
+    $ script/install_kubectl.sh
     $ script/setup
     $ source .environ
     ```
@@ -153,7 +169,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     
     The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
 
-7. Login to your container repository
+10. Login to your container repository
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
@@ -262,7 +278,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     Note: Make sure you're in the right directory when you do this
     <pre>
-    $ docker build -t monolith-service .
+    $ cd app/monolith-service/ && docker build -t monolith-service -f Dockerfile.solved .
     </pre>
 
     You'll see a bunch of output as Docker builds all layers of the image.  If there is a problem along the way, the build process will fail and stop (red text and warnings along the way are fine as long as the build process does not fail).  Otherwise, you'll see a success message at the end of the build output like this:
@@ -500,7 +516,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     ![ECR push complete](images/01-ecr-push-complete.png)
 
 ### Checkpoint:
-At this point, you should have a working container for the monolith codebase stored in an ECR repository and ready to deploy with ECS in the next lab.
+At this point, you should have a working container for the monolith codebase stored in an ECR repository and ready to deploy with Kubernetes in the next lab.
 
 [*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
 
@@ -517,7 +533,7 @@ A Pod (as in a pod of whales or pea pod) is a group of one or more containers (s
 [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/)
 
 
-![Pods](images/05-pod.svg)
+![Pods](images/01-pod.svg)
 
 </details>
 
@@ -530,7 +546,7 @@ You describe a desired state in a Deployment, and the Deployment Controller chan
 [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 
 
-![Pods](images/05-pod.svg)
+![Pods](images/01-deployment.svg)
 
 </details>
 
@@ -655,7 +671,20 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
 ### Instructions:
 
-1. Update the monolith service to be of type LoadBalancer:
+1. Finish deploying the website:
+
+    If you recall, earlier we kicked off the deployment of the static Cloudfront site for the Mythical Mysfits. By now that stack should have completed, and we can deploy and refresh our environment variables.
+    
+    ```
+    script/upload-site.sh 
+    ```
+    
+    ### Checkpoint:
+    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+    ![initial website](images/00-website.png)
+    
+
+2. Update the monolith service to be of type LoadBalancer:
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
     
@@ -711,9 +740,9 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     
     If this works we are now ready to fix the website.
 
-4. Fix the website:
-
-    If you recall, visiting the Cloudfront static site for the Mythical Mysfits is currently empty. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
+4.  Re-upload the website to point at our service.
+    
+    Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
     
     We have provided a script to update the website with the mysfits service load balancer name and to redeploy. Execute this now
     

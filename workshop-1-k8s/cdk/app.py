@@ -98,92 +98,6 @@ class MythicalStack(core.Stack):
             value=mythical_table.table_name,
         )
         
-        ######## S3 #######
-        
-        
-        
-        
-        mythical_bucket = s3.Bucket(
-            self,
-            "mythical_bucket",
-            removal_policy=core.RemovalPolicy.DESTROY,
-        )
-        
-        
-
-        distribution = cloudfront.CloudFrontWebDistribution(
-            self,
-            "dist",
-            origin_configs=[
-                cloudfront.SourceConfiguration(
-                    behaviors=[cloudfront.Behavior(is_default_behavior=True)],
-                    s3_origin_source=cloudfront.S3OriginConfig(
-                      s3_bucket_source=mythical_bucket,
-                      origin_access_identity=cloudfront.OriginAccessIdentity(
-                        self,
-                        "spaoai",
-                        comment="SPA CF OAI",
-                      ),
-                    ),
-                )
-            ],
-            error_configurations=[
-              {
-                "errorCachingMinTtl": 0.0,
-                "errorCode": 404,
-                "responseCode": 200,
-                "responsePagePath": "/index.html"
-              },
-              {
-                "errorCachingMinTtl": 0.0,
-                "errorCode": 403,
-                "responseCode": 200,
-                "responsePagePath": "/index.html"
-              },
-            ],
-        )
-        
-        #spa_source = s3d.Source.asset(
-        #  path = "../web",
-        #  #path="../frontend/",
-        #  #bundling=core.BundlingOptions(
-        #  #  image=core.BundlingDockerImage.from_registry("bayesimpact/react-base"),
-        #  #  command=["make", "build-prod-cloud"],
-        #  #  user="root",
-        #  #),
-        #)
-      #
-        #self.spa_deployment = s3d.BucketDeployment(
-        #  self,
-        #  "spadeploy",
-        #  destination_bucket=mythical_bucket,
-        #  sources=[spa_source],
-        #  distribution=distribution,
-        #  #server_side_encryption=s3d.ServerSideEncryption.AWS_KMS,
-        #  #server_side_encryption_aws_kms_key_id=self.bucket_key.key_id,
-        #)
-        
-        output_cf = core.CfnOutput(
-            self,
-            "mythical_website",
-            export_name="S3WebsiteURL",
-            value=distribution.domain_name,
-        )
-        
-        output_cf = core.CfnOutput(
-            self,
-            "mythical_distribution",
-            export_name="mythicaldistributionoutput",
-            value=distribution.distribution_id,
-        )
-        
-        output_bucket = core.CfnOutput(
-            self,
-            "mythical_bucket_output",
-            export_name="mythicalwebsite",
-            value=mythical_bucket.bucket_name,
-        )
-        
         ######## VPC ########
         
         mythical_cluster_vpc = ec2.Vpc(
@@ -341,12 +255,93 @@ class MythicalStack(core.Stack):
             export_name="mythical-like-repository",
             value=ecr_like.repository_uri
         )
+        
+class MythicalDistributionStack(core.Stack):
 
-MythicalStack(
+    def __init__(
+        self,
+        scope: core.Construct,
+        id: str,
+        **kwargs,
+    ) -> None:
+
+        super().__init__(scope, id, **kwargs)
+        
+        mythical_bucket = s3.Bucket(
+            self,
+            "mythical_bucket",
+            removal_policy=core.RemovalPolicy.DESTROY,
+        )
+        
+        output_bucket = core.CfnOutput(
+            self,
+            "mythical_bucket_output",
+            export_name="mythicalwebsite",
+            value=mythical_bucket.bucket_name,
+        )
+        
+        
+        distribution = cloudfront.CloudFrontWebDistribution(
+            self,
+            "dist",
+            origin_configs=[
+                cloudfront.SourceConfiguration(
+                    behaviors=[cloudfront.Behavior(is_default_behavior=True)],
+                    s3_origin_source=cloudfront.S3OriginConfig(
+                      s3_bucket_source=mythical_bucket,
+                      origin_access_identity=cloudfront.OriginAccessIdentity(
+                        self,
+                        "spaoai",
+                        comment="SPA CF OAI",
+                      ),
+                    ),
+                )
+            ],
+            error_configurations=[
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 404,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 403,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+            ],
+        )
+            
+        output_cf = core.CfnOutput(
+            self,
+            "mythical_website",
+            export_name="S3WebsiteURL",
+            value=distribution.domain_name,
+        )
+        
+        output_cf = core.CfnOutput(
+            self,
+            "mythical_distribution",
+            export_name="mythicaldistributionoutput",
+            value=distribution.distribution_id,
+        )
+            
+
+ms = MythicalStack(
     app,
     "mythicalstack",
     env=env,
     stack_name="mythicalstack",
+    #role_arn=role_arn,
+)
+
+md = MythicalDistributionStack(
+    app,
+    "mythicaldistributionstack",
+    env=env,
+    stack_name="mythicaldistributionstack",
+    #mythical_bucket=ms.mythical_bucket
     #role_arn=role_arn,
 )
 
