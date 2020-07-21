@@ -18,10 +18,11 @@ if [[ -z $BUCKET_NAME ]]; then
 fi
 
 
-if 
-  API_ENDPOINT=$(kubectl get ingress/mysfits-ingress $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
-else 
-  API_ENDPOINT
+API_ENDPOINT=$(kubectl get ingress/mysfits-ingress $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
+
+if [[ -z $API_ENDPOINT ]]; then
+  echo "No ingress yet"
+  API_ENDPOINT=$(kubectl get ingress/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
 fi
 
 echo $API_ENDPOINT

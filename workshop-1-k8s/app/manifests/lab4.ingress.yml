@@ -10,13 +10,15 @@ metadata:
     app: mysfits-ingress
 spec:
   rules:
+    #- host: glumanda.com
     - http:
         paths:
+          - path: /mysfits/*/like/
+            backend: 
+              serviceName: mysfits-service-like
+              servicePort: 80
           - path: /mysfits
             backend:
-              serviceName: "mysfits-service"
+              serviceName: mysfits-service
               servicePort: 80
-          - path: /mysfits/like/*
-            backend: 
-              serviceName: "mysfits-service-no-like"
-              servicePort: 80
+          

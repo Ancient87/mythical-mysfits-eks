@@ -6,7 +6,7 @@ metadata:
   namespace: mysfits
 spec:
   # Change Me to scale
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: mysfits
@@ -21,7 +21,7 @@ spec:
       containers:
         - name: mysfits-like
           #UPDATE REPO AND VERSION HERE
-          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:latest
+          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:v11
           ports:
             - containerPort: 80
           env:
@@ -30,7 +30,9 @@ spec:
             value: ap-southeast-1
           #YOUR $MYTHICAL_WEBSITE xxxyyyzzzz.cloudfront.net DO NOT INCLUDE "http"
           - name: MONOLITH_URL
-            value: d3iokstsgkfqgv.cloudfront.net
+            value: 2e300321-mysfits-mysfitsin-fbed-1280039412.ap-southeast-1.elb.amazonaws.com
+          - name: PYTHONUNBUFFERED
+            value: "0"
       # Needed for IAM roles
       securityContext:
         fsGroup: 1337
@@ -39,11 +41,11 @@ apiVersion: v1
 kind: Service
 
 metadata:
-  name: mysfits-service-no-like
+  name: mysfits-service-like
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: mysfits
     type: like

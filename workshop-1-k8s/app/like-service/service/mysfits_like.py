@@ -3,12 +3,17 @@ from __future__ import print_function
 import os
 import sys
 import requests
-from urllib import parse
+from urllib.parse import urlparse
 from flask import Flask, jsonify, json, Response, request
 from flask_cors import CORS
+import logging
 
 app = Flask(__name__)
 CORS(app)
+
+logging.basicConfig(level=logging.DEBUG)
+
+print(f"Here we go v10", file=sys.stderr)
 
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
@@ -21,12 +26,20 @@ def process_like_request():
     print('Like processed.', file=sys.stderr)
 
 def fulfill_like(mysfit_id):
-    url = parse('http://{}/mysfits/{}/fulfill-like'.format(os.environ['MONOLITH_URL'], mysfit_id))
+    print(f"Fulfill The request {mysfit_id}", file=sys.stderr)
+    url_s = f"http://{os.environ['MONOLITH_URL']}/mysfits/{mysfit_id}/fulfill-like"
+    print(url_s)
+    url = urlparse(url_s)
     return requests.post(url=url.geturl())
 
 @app.route("/mysfits/<mysfit_id>/like", methods=['POST'])
 def like_mysfit(mysfit_id):
     process_like_request()
+    print('Like being processed.', file=sys.stderr)
+    print(f"Here we go like", file=sys.stderr)
+    print(f"The request {mysfit_id}", file=sys.stderr)
+    app.logger.info(f"The request {mysfit_id}")
+    
     service_response = fulfill_like(mysfit_id)
 
     flask_response = Response(service_response)

@@ -109,8 +109,8 @@ spec:
             # Maximum number of times to retry the aws calls.
             # defaults to 10.
             # - --aws-max-retries=10
-            #- -v=10
-            #- --aws-api-debug
+            - -v=4
+            - --aws-api-debug
           env:
             # AWS key id for authenticating with the AWS API.
             # This is only here for examples. It's recommended you instead use

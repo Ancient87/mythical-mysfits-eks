@@ -295,7 +295,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     Note: Make sure you're in the right directory when you do this
     <pre>
-    $ cd app/monolith-service/ && docker build -t monolith-service -f Dockerfile.solved .
+    $ cd app/monolith-service/ && docker build -t monolith-service -f Dockerfile.solved . && cd -
     </pre>
 
     You'll see a bunch of output as Docker builds all layers of the image.  If there is a problem along the way, the build process will fail and stop (red text and warnings along the way are fine as long as the build process does not fail).  Otherwise, you'll see a success message at the end of the build output like this:
@@ -871,8 +871,7 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     *Note: Your URI will be unique.*
 
     ```
-    $ cd app/like-service
-    $ docker build -t like-service .
+    $ cd app/like-service && docker build -t like-service . && cd -
     $ docker tag like-service:latest $ECR_LIKE:latest
     $ docker push $ECR_LIKE:latest
     ```
@@ -889,15 +888,15 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     
     Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
 
-    internet
-        |
-   [ Ingress ]
-   --|-----|--
-   [ Services ]
+        internet
+            |
+    [ Ingress ]
+    --|-----|--
+    [ Services ]
 
-An Ingress may be configured to give Services externally-reachable URLs, load balance traffic, terminate SSL / TLS, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a load balancer, though it may also configure your edge router or additional frontends to help handle the traffic.
+    An Ingress may be configured to give Services externally-reachable URLs, load balance traffic, terminate SSL / TLS, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a load balancer, though it may also configure your edge router or additional frontends to help handle the traffic.
 
-An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type Service.Type=NodePort or Service.Type=LoadBalancer.
+    An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type Service.Type=NodePort or Service.Type=LoadBalancer.
     
     [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
     
@@ -913,9 +912,14 @@ An Ingress does not expose arbitrary ports or protocols. Exposing services other
     
     Deploy the Mythical mysfits ingress
     
-    
     ```
     $ kubectl apply -f app/manifests/lab4.ingress.yaml $MM
+    ```
+    
+    Redeploy the Mythical mysfits website to use the ingress
+    
+    ```
+    $ script/upload-site.sh 
     ```
 
 7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the pod  logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!
