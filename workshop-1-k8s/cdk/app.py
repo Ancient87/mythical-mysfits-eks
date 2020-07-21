@@ -182,10 +182,6 @@ class MythicalStack(core.Stack):
             namespace="mysfits",
         )
         
-        #mythical_service_account.node.default_child.addDependsOn(
-        #    mythical_namespace.node.default_child    
-        #)
-        
         
         mythical_table.grant_read_write_data(mythical_service_account.role)
         
@@ -200,23 +196,6 @@ class MythicalStack(core.Stack):
         )
         
         worker_node_role = mythical_eks_nodegroup.role
-        
-        #worker_node_role.add_managed_policy(
-        #    iam.ManagedPolicy.from_aws_managed_policy_name(
-        #        "policy/AmazonEKSWorkerNodePolicy",
-        #    )
-        #)
-        
-        #mythical_eks_cluster = eks.FargateCluster(
-        #    self,
-        #    "mythicalekscluster",
-        #    cluster_name="mythical_eks_cluster",
-        #    vpc=mythical_cluster_vpc,
-        #    #vpc_subnets=[ec2.SubnetSelection(
-        #    #    subnet_type=ec2.SubnetType.PUBLIC,    
-        #    #)],
-        #    version=eks.KubernetesVersion.V1_16,
-        #)
         
         mythical_eks_cluster_role = mythical_eks_cluster.role
     
