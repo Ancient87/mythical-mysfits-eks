@@ -1,9 +1,4 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mysfits
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,7 +21,7 @@ spec:
       containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: 125963502549.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-o6pdjzkwqfhs:latest
+          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-fripm24803l0:latest
           ports:
             - containerPort: 80
           env:

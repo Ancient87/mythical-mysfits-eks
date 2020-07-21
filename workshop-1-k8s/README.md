@@ -17,9 +17,9 @@ These labs are designed to be completed in sequence, and the full set of instruc
 
 * **Workshop Setup:** [Setup working environment on AWS](#lets-begin)
 * **Lab 1:** [Containerize the Mythical Mysfits monolith](#lab-1---containerize-the-mythical-mysfits-adoption-agency-platform)
-* **Lab 2:** [Deploy the Mythical Mysfits monolith to Kubernetes](#lab-2---deploy-the-mythical-mysfits-adoption-agency-platform)
-* **Lab 3:** [Scale the Mythical Mysfits monolith on Kubernetes](#lab-3---scale-the-mythical-mysfits-adoption-agency-platform)
-* **Lab 4:** [Carve out the Mythical Mysfits monolith microservices on Kubernetes](#lab-4---scale-the-mythical-mysfits-adoption-agency-platform)
+* **Lab 2:** [Deploy your container using ECR/EKS](#lab-2---deploy-your-container-using-ecreks)
+* **Lab 3:** [Scale the adoption platform monolith with an NLB](#lab-3---scale-the-adoption-platform-monolith-with-an-nlb)
+* **Lab 4:** [Incrementally build and deploy each microservice using EKS](#lab-4-incrementally-build-and-deploy-each-microservice-using-eks)
 
 ### Conventions:
 
@@ -99,7 +99,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ cd mythical-mysfits-eks/workshop-1-k8s
     ```
 
-5.  Setup the credentials in Cloud. Run the below script to associate the instance        role 
+5.  Setup the credentials in Cloud9. Run the below script to associate the instance role 
 
     ```
     $ script/associate-profile.sh
@@ -117,7 +117,13 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     aws sts get-caller identity
     ```
 
-6. Prepre the IAC provider
+6. Resize the volume. The default Cloud9 instance comes with 10GB of space. As we are going to be downloading a lot of container images this won't be sufficient. Rune the following command to resize to 20GB
+
+    ```
+    $ script/resize.sh 20
+    ```
+
+7. Prepre the IAC provider
 
      
     ```
@@ -636,7 +642,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767). Each node proxies that port (the same port number on every Node) into your Service. Your Service reports the allocated port in its .spec.ports[*].nodePort field.
 
     [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
-</details>
+    </details>
 
     <details>
     <summary>HINT: curl refresher</summary>
@@ -731,6 +737,8 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     NAME              TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)        AGE
     mysfits-service   LoadBalancer   172.20.120.184   XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com   80:31601/TCP   6h2m
     ```
+    
+    Wait for your load balancer to become active in the console ![Active ELB](images/03-active.png)
     
     As before, try and test if this works 
     

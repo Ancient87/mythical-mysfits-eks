@@ -146,6 +146,17 @@ class MythicalStack(core.Stack):
             version=eks.KubernetesVersion.V1_16,
         )
         
+        cluster_role = mythical_eks_cluster.role
+        
+        cluster_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ec2:DescribeAccountAttributes",
+                "ec2:DescribeInternetGateways",],
+                resources=["*"],
+            )    
+        )
+        
         mythical_namespace_definition = {
             "apiVersion": "v1",
             "kind": "Namespace",
