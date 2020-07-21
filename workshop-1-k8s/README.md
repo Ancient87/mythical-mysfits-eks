@@ -174,6 +174,17 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
     
     The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
+    
+    Next, please run following command to generate SSH Key in Cloud9. This key will be used later in stateful microservices with EFS lab.
+    ```
+    ssh-keygen
+    ```
+    Press enter 3 times to take the default choices.
+    Upload the public key to your EC2 region:
+    ```
+    aws ec2 import-key-pair --key-name "eksworkshop" --public-key-material file://~/.ssh/id_rsa.pub
+    ```
+
 
 10. Login to your container repository
 
