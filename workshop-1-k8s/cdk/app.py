@@ -182,6 +182,26 @@ class MythicalStack(core.Stack):
             namespace="mysfits",
         )
         
+        alb_service_account = eks.ServiceAccount(
+            self,
+            "albserviceaccount",
+            cluster=mythical_eks_cluster,
+            name="alb-ingress-controller",
+            namespace="kube-system",
+        )
+        
+        alb_role = alb_service_account.role
+        
+        pol_statement = None
+        
+        with open("./alb-policy.json", "r") as policy_file:
+            pol_string = policy_file.read()
+            pol_json = json.loads(pol_string)
+            statements = pol_json["Statement"]
+            for statement in statements:
+                pol_statement = iam.PolicyStatement.from_json(statement)
+                alb_role.add_to_policy(pol_statement)
+        
         
         mythical_table.grant_read_write_data(mythical_service_account.role)
         

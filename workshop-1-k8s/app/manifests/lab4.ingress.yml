@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "mysfits-ingress"
+  namespace: "mysfits"
+  annotations:
+    kubernetes.io/ingress.class: alb
+  labels:
+    app: mysfits-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /mysfits
+            backend:
+              serviceName: "mysfits-service"
+              servicePort: 80
+          - path: /mysfits/like/*
+            backend: 
+              serviceName: "mysfits-service-no-like"
+              servicePort: 80

@@ -1,13 +1,8 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mysfits
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysfits
+  name: mysfits-like
   namespace: mysfits
 spec:
   # Change Me to scale
@@ -15,26 +10,27 @@ spec:
   selector:
     matchLabels:
       app: mysfits
-      type: monolith
+      type: like
   template:
     metadata:
       labels:
         app: mysfits
-        type: monolith
+        type: like
     spec:
       serviceAccountName: mythical-service-account
       containers:
-        - name: mysfits-monolith
+        - name: mysfits-like
           #UPDATE REPO AND VERSION HERE
-          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-fripm24803l0:latest
+          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:latest
           ports:
             - containerPort: 80
           env:
           #UPDATE REGION AND TABLE HERE!
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
-          - name: DDB_TABLE_NAME
-            value: mythicalstack-mythicaltable33D867A5-831I9VOG3Y9P
+          #YOUR $MYTHICAL_WEBSITE xxxyyyzzzz.cloudfront.net DO NOT INCLUDE "http"
+          - name: MONOLITH_URL
+            value: d3iokstsgkfqgv.cloudfront.net
       # Needed for IAM roles
       securityContext:
         fsGroup: 1337
@@ -43,16 +39,14 @@ apiVersion: v1
 kind: Service
 
 metadata:
-  name: mysfits-service
-  namespace: mysfits
+  name: mysfits-service-no-like
   annotations:
-    #UPDATE the spec to NLB
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
-  # Update the spec to be of type Loadbalancer
   type: LoadBalancer
   selector:
     app: mysfits
+    type: like
     
   ports:
     - protocol: TCP

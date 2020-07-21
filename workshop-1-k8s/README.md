@@ -551,9 +551,6 @@ You describe a desired state in a Deployment, and the Deployment Controller chan
 
 [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 
-
-![Pods](images/01-deployment.svg)
-
 </details>
 
 Containter definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
@@ -561,8 +558,6 @@ Containter definition parameters map to options and arguments passed to the [doc
 In this lab, you will create a pod and deployment definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with Kubernetes. You will be using a managed worker node group in this setup.
 
 EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
-
-#TODO: Change image for EKS
 
 ![Lab 2 Architecture](images/02-arch.png)
 
@@ -826,10 +821,9 @@ Here's what you will be implementing:
 
 ![Lab 4](images/04-arch.png)
 
-*Note: The green pods denote the monolith and the orange pods denote the "like" microservice
+*Note: The orange pods denote the monolith and the turquoise pods denote the "like" microservice
 
-    
-As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/) to deploy these microservices, but this time we'll walk through all the deployment steps for a fresh service.
+As with the monolith, you'll be using Deployments to deploy these microservices, but this time we'll walk through all the deployment steps for a fresh service.
 
 ### Instructions:
 
@@ -848,140 +842,72 @@ As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/)
 
 2. With this new functionality added to the monolith, rebuild the monolith docker image with a new tag, such as `nolike`, and push it to ECR just as before (It is a best practice to avoid the `latest` tag, which can be ambiguous. Instead choose a unique, descriptive name, or even better user a Git SHA and/or build ID):
 
-    <pre>
+    ```
     $ cd app/monolith-service
     $ docker build -t monolith-service:nolike .
-    $ docker tag monolith-service:nolike <b><i>ECR_REPOSITORY_URI</i></b>:nolike
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:nolike
-    </pre>
+    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolike
+    $ docker push $ECR_MONOLITH:nolike
+    ```
 
 3. Now, just as in Lab 2, create a new revision of the monolith Task Definition (this time pointing to the "nolike" version of the container image), AND update the monolith service to use this revision as you did in Lab 3.
 
 4. Now, build the like service and push it to ECR.
 
-    To find the like-service ECR repo URI, navigate to [Repositories](https://console.aws.amazon.com/ecs/home#/repositories) in the ECS dashboard, and find the repo named like <code><b><i>STACK_NAME</i></b>-like-XXX</code>.  Click on the like-service repository and copy the repository URI.
+    To find the like-service ECR repo URI, check the $ECR_LIKE environment variable.
 
     ![Getting Like Service Repo](images/04-ecr-like.png)
 
     *Note: Your URI will be unique.*
 
-    <pre>
+    ```
     $ cd app/like-service
     $ docker build -t like-service .
-    $ docker tag like-service:latest <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    </pre>
+    $ docker tag like-service:latest $ECR_LIKE:latest
+    $ docker push $ECR_LIKE:latest
+    ```
 
-5. Create a new **Task Definition** for the like service using the image pushed to ECR.
-
-    Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard. Click on **Create New Task Definition**.
-
-    Select **Fargate** launch type, and click **Next step**.
-
-    Enter a name for your Task Definition, e.g. mysfits-like.
-
-    In the "[Task execution IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)" section, Fargate needs an IAM role to be able to pull container images and log to CloudWatch.  Select the role named like <code><b><i>STACK_NAME</i></b>-EcsServiceRole-XXXXX</code> that was already created for the monolith service.
-
-    The "[Task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size)" section lets you specify the total cpu and memory used for the task. This is different from the container-specific cpu and memory values, which you will also configure when adding the container definition.
-
-    Select **0.5GB** for **Task memory (GB)** and select **0.25vCPU** for **Task CPU (vCPU)**.
-
-    Your progress should look similar to this:
-
-    ![Fargate Task Definition](images/04-taskdef.png)
-
-    Click **Add container** to associate the like service container with the task.
-
-    Enter values for the following fields:
-
-    * **Container name** - this is a logical identifier, not the name of the container image (e.g. `mysfits-like`).
-    * **Image** - this is a reference to the container image stored in ECR.  The format should be the same value you used to push the like service container to ECR - <pre><b><i>ECR_REPOSITORY_URI</i></b>:latest</pre>
-    * **Port mapping** - set the container port to be `80`.
-
-    Here's an example:
-
-    ![Fargate like service container definition](images/04-containerdef.png)
-
-    *Note: Notice you didn't have to specify the host port because Fargate uses the awsvpc network mode. Depending on the launch type (EC2 or Fargate), some task definition parameters are required and some are optional. You can learn more from our [task definition documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html).*
+5. Create a new **Manifest** for the like deployment using the image pushed to ECR.
 
     The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It references an environment variable called `MONOLITH_URL` to know where to send fulfillment.
 
-    Scroll down to the "Advanced container configuration" section, and in the "Environment" section, create an environment variable using `MONOLITH_URL` for the key. For the value, enter the **ALB DNS name** that currently fronts the monolith.
 
-    Here's an example (make sure you enter just the hostname like `alb-mysfits-1892029901.eu-west-1.elb.amazonaws.com` without any "http" or slashes):
+6. Create an Kubernetes service to front the Like Service deployment you just created and associate it with an Ingress Controller.
 
-    ![monolith env var](images/04-env-var.png)
+    <details>
+    <summary>INFO: What is an Ingress?</summary>
+    
+    Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
 
-    Fargate conveniently enables logging to CloudWatch for you.  Keep the default log settings and take note of the **awslogs-group** and the **awslogs-stream-prefix**, so you can find the logs for this task later.
+    internet
+        |
+   [ Ingress ]
+   --|-----|--
+   [ Services ]
 
-    Here's an example:
+An Ingress may be configured to give Services externally-reachable URLs, load balance traffic, terminate SSL / TLS, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a load balancer, though it may also configure your edge router or additional frontends to help handle the traffic.
 
-    ![Fargate logging](images/04-logging.png)
+An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type Service.Type=NodePort or Service.Type=LoadBalancer.
+    
+    [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+    
+    ![Pods](images/04-ingress.svg)
+    
+    </details>
+    
+    Deploy the ALB ingress controller
+    
+    ```
+    $ kubectl apply -f app/manifests/alb-ingress-controller.yaml $MM --namespace=kube-system
+    ```
+    
+    Deploy the Mythical mysfits ingress
+    
+    
+    ```
+    $ kubectl apply -f app/manifests/lab4.ingress.yaml $MM
+    ```
 
-    Click **Add** to associate the container definition, and click **Create** to create the task definition.
-
-6. Create an ECS service to run the Like Service task definition you just created and associate it with the existing ALB.
-
-    Navigate to the new revision of the Like task definition you just created.  Under the **Actions** drop down, choose **Create Service**.
-
-    Configure the following fields:
-
-    * **Launch type** - select **Fargate**
-    * **Cluster** - select your workshop ECS cluster
-    * **Service name** - enter a name for the service (e.g. `mysfits-like-service`)
-    * **Number of tasks** - enter `1`.
-
-    Here's an example:
-
-    ![ECS Service](images/04-ecs-service-step1.png)
-
-    Leave other settings as defaults and click **Next Step**
-
-    Since the task definition uses awsvpc network mode, you can choose which VPC and subnet(s) to host your tasks.
-
-    For **Cluster VPC**, select your workshop VPC.  And for **Subnets**, select the private subnets; you can identify these based on the tags.
-
-    Leave the default security group which allows inbound port 80.  If you had your own security groups defined in the VPC, you could assign them here.
-
-    Here's an example:
-
-    ![ECS Service VPC](images/04-ecs-service-vpc.png)
-
-    Scroll down to "Load balancing" and select **Application Load Balancer** for *Load balancer type*.
-
-    You'll see a **Load balancer name** drop-down menu appear.  Select the same Mythical Mysfits ALB used for the monolith ECS service.
-
-    In the "Container to load balance" section, select the **Container name : port** combo from the drop-down menu that corresponds to the like service task definition.
-
-    Your progress should look similar to this:
-
-    ![ECS Load Balancing](images/04-ecs-service-alb.png)
-
-    Click **Add to load balancer** to reveal more settings.
-
-    For the **Production listener Port**, select **80:HTTP** from the drop-down.
-
-    For the **Target Group Name**, you'll need to create a new group for the Like containers, so leave it as "create new" and replace the auto-generated value with `mysfits-like`.  This is a friendly name to identify the target group, so any value that relates to the Like microservice will do.
-
-    Change the path pattern to `/mysfits/*/like`.  The ALB uses this path to route traffic to the like service target group.  This is how multiple services are being served from the same ALB listener.  Note the existing default path routes to the monolith target group.
-
-    For **Evaluation order** enter `1`.  Edit the **Health check path** to be `/`.
-
-    And finally, uncheck **Enable service discovery integration**.  While public namespaces are supported, a public zone needs to be configured in Route53 first.  Consider this convenient feature for your own services, and you can read more about [service discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) in our documentation.
-
-    Your configuration should look similar to this:
-
-    ![Like Service](images/04-ecs-service-alb-detail.png)
-
-    Leave the other fields as defaults and click **Next Step**.
-
-    Skip the Auto Scaling configuration by clicking **Next Step**.
-
-    Click **Create Service** on the Review page.
-
-    Once the Service is created, click **View Service** and you'll see your task definition has been deployed as a service.  It starts out in the **PROVISIONING** state, progresses to the **PENDING** state, and if your configuration is successful, the service will finally enter the **RUNNING** state.  You can see these state changes by periodically click on the refresh button.
-
-7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the CloudWatch logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!
+7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the pod  logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!
 
 8. If you have time, you can now remove the old like endpoint from the monolith now that it is no longer seeing production use.
 

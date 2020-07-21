@@ -2,19 +2,13 @@
 
 #set -eu
 
-if [[ $# -eq 1 ]]; then
-  STACK_NAME=$#
-else
-  STACK_NAME=mythicaldistributionstack
-fi
+
+STACK_NAME=mythicaldistributionstack
 
 aws cloudformation describe-stacks --stack-name "$STACK_NAME" | jq -r '[.Stacks[0].Outputs[] | {key: .OutputKey, value: .OutputValue}] | from_entries' > cfn-dist-output.json
 
-if [[ $# -eq 1 ]]; then
-  BUCKET_NAME="$1"
-else
-  BUCKET_NAME=$(jq < cfn-dist-output.json -r '.mythicalbucketoutput // empty')
-fi
+
+BUCKET_NAME=$(jq < cfn-dist-output.json -r '.mythicalbucketoutput // empty')
 
 DISTRIBUTION_ID=$(jq < cfn-dist-output.json -r '.mythicaldistribution // empty')
 
@@ -23,7 +17,12 @@ if [[ -z $BUCKET_NAME ]]; then
   exit 1
 fi
 
-API_ENDPOINT=$(kubectl get service/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
+
+if 
+  API_ENDPOINT=$(kubectl get ingress/mysfits-ingress $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
+else 
+  API_ENDPOINT
+fi
 
 echo $API_ENDPOINT
 

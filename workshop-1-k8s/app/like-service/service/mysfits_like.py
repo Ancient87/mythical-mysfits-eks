@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import requests
-from urlparse import urlparse
+from urllib import parse
 from flask import Flask, jsonify, json, Response, request
 from flask_cors import CORS
 
@@ -21,9 +21,8 @@ def process_like_request():
     print('Like processed.', file=sys.stderr)
 
 def fulfill_like(mysfit_id):
-    url = urlparse('http://{}/mysfits/{}/fulfill-like'.format(os.environ['MONOLITH_URL'], mysfit_id))
+    url = parse('http://{}/mysfits/{}/fulfill-like'.format(os.environ['MONOLITH_URL'], mysfit_id))
     return requests.post(url=url.geturl())
-
 
 @app.route("/mysfits/<mysfit_id>/like", methods=['POST'])
 def like_mysfit(mysfit_id):
