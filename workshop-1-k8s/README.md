@@ -62,7 +62,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 **Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mysfits-cloud9&templateURL=https://mythical-mysfits-bootstrap.s3.amazonaws.com/cloud9.yml)
 
 
-2. The template will automatically bring you to the CloudFormation Dashboard and start the stack creation process in the specified region. Give the stack a name that is unique within your account, and proceed through the wizard to launch the stack. Leave all options at their default values, but make sure to check the box to allow CloudFormation to create IAM roles on your behalf:
+2. The template will automatically bring you to the CloudFormation Dashboard and start the stack creation process in the specified region. <b><i>Leaving the stack name as is<b><i>, or some of the automation later on will break. proceed through the wizard to launch the stack. Leave all options at their default values, but make sure to check the box to allow CloudFormation to create IAM roles on your behalf:
 
     ![IAM resources acknowledgement](images/00-cf-create.png)
 
