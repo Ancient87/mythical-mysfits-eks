@@ -710,7 +710,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
     
-    Modify your monolith.yml service as follows
+    Modify your monolith.yml service as follows and take note of the change of type.
     
     ```
     apiVersion: v1
