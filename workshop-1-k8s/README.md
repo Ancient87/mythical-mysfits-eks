@@ -849,20 +849,18 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     #     return flaskResponse
     ```
 
-    This provides an endpoint that can still manage persistence to DynamoDB, but omits the "business logic" (okay, in this case it's just a print statement, but in real life it could involve permissions checks or other nontrivial processing) handled by the `process_like_request` function.
+    This provides an endpoint that can still manage persistence to DynamoDB, but omits the "business logic" (okay, in this case it's just a print statement, but in real life it could involve permissions checks or other nontrivial processing) handled by the `process_like_request` function. We have provided a fixed version of the code called "mythicalMysfitsServiceLab4.py" for your convenience.
 
-2. With this new functionality added to the monolith, rebuild the monolith docker image with a new tag, such as `nolike`, and push it to ECR just as before (It is a best practice to avoid the `latest` tag, which can be ambiguous. Instead choose a unique, descriptive name, or even better user a Git SHA and/or build ID):
+2. With this new functionality added to the monolith, rebuild the monolith docker image with a new tag, such as `nolike`, and push it to ECR just as before. We have provided a new Dockerfile which points at the modified Monolith code (Dockerfile4.solved). N.B: (It is a best practice to avoid the `latest` tag, which can be ambiguous. Instead choose a unique, descriptive name, or even better user a Git SHA and/or build ID):
 
     ```
     $ cd app/monolith-service
-    $ docker build -t monolith-service:nolike .
-    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolike
-    $ docker push $ECR_MONOLITH:nolike
+    $ cd app/monolith-service/ && docker build -t monolith-service:nolike -f Dockerfile4.solved . && cd -
+    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolikev1
+    $ docker push $ECR_MONOLITH:nolikev1
     ```
 
-3. Now, just as in Lab 2, create a new revision of the monolith Task Definition (this time pointing to the "nolike" version of the container image), AND update the monolith service to use this revision as you did in Lab 3.
-
-4. Now, build the like service and push it to ECR.
+3. Now, build the like service and push it to ECR.
 
     To find the like-service ECR repo URI, check the $ECR_LIKE environment variable.
 
@@ -876,20 +874,56 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     $ docker push $ECR_LIKE:latest
     ```
 
-5. Create a new **Manifest** for the like deployment using the image pushed to ECR.
+5. Create a new **Manifest** for the monolith and like deployments and services using the images pushed to ECR.
 
-    The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It references an environment variable called `MONOLITH_URL` to know where to send fulfillment.
+    The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It makes use of the Kubernetes internal service discovery [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) so no additional environment variables are needed. In Kubernetes by default every service (within a namespace) can be resolved under <i>my-svc.my-namespace.svc.cluster-domain.example</i>. In our case, the like service will find the monolith under http://mysfits-service-no-like
+    
+    Refer to app/manifests/monolith.lab4.draft.y,l and like.lab4.draft.yaml . As per last time fill in the correct references to your images and DynamoDB tables.
+    
+    Once done copy them to remove "draft" and apply them:
+    
+    ```
+    $ cp app/manifests/monolith.lab4.draft.yml app/manifests/monolith.lab4.yml
+    $ cp app/manifests/monolith.lab3.draft.yml app/manifests/monolith.lab3.yml
+    $ kubectl apply -f app/manifests/monolith.lab4.yml $MM  
+    $ kubectl apply -f app/manifests/like.lab4.yml $MM  
+    ```
+    
+    You can test that your services deployed as expected
+    
+    ```
+    $ kubectl get services $MM     
+    $ kubectl get pods $MM
+    ```
+    You should see output as below (original monolith/like service/monolith-no-like)
+    
+    ```
+    NAME                      TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+    mysfits-service           NodePort   172.20.38.243    <none>        80:31873/TCP   22h
+    mysfits-service-like      NodePort   172.20.108.252   <none>        80:32579/TCP   13h
+    mysfits-service-no-like   NodePort   172.20.94.232    <none>        80:32055/TCP   17h
+    
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    mysfits-6f65999f64-4j7gk                1/1     Running   0          128m
+    mysfits-6f65999f64-l8jm6                1/1     Running   0          128m
+    mysfits-like-6685c67684-k6qlq           1/1     Running   0          41m
+    mysfits-like-6685c67684-wjfcn           1/1     Running   0          41m
+    mysfitsmonolithnolike-bdb8dcc57-wdrr4   1/1     Running   0          27m
+    mysfitsmonolithnolike-bdb8dcc57-wsg2x   1/1     Running   0          27m
 
+    ```
 
-6. Create an Kubernetes service to front the Like Service deployment you just created and associate it with an Ingress Controller.
+6. Now we need to expose these services. We will create a Kubernetes Ingress to front the Like Service deployment you just created and associate it with an Ingress. 
+    
+    The Ingress will automagically map an Application Load Balancer to your cluster and the Kubernetes service behind it. [ALB Ingress Controller on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html)
 
     <details>
     <summary>INFO: What is an Ingress?</summary>
     
     Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
 
-        internet
-            |
+      internet
+         |
     [ Ingress ]
     --|-----|--
     [ Services ]
@@ -904,19 +938,37 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     
     </details>
     
-    Deploy the ALB ingress controller
+    Deploy the ALB ingress controller. This is provided by AWS so setup ALBs as ingress for Kubernetes.
     
     ```
     $ kubectl apply -f app/manifests/alb-ingress-controller.yaml $MM --namespace=kube-system
     ```
     
-    Deploy the Mythical mysfits ingress
+    Deploy the Mythical mysfits ingress. This will configure the path routing to point at the services. In our case we want the following which is contained in lab4.ingress.yaml This will cause like requests to go to our new like service and everything else to the monolith (minus the like service)
+    
+    ```
+    - http:
+        paths:
+          - path: /mysfits/*/like
+            backend: 
+              serviceName: mysfits-service-like
+              servicePort: 80
+          - path: /mysfits*
+            backend:
+              serviceName: mysfits-service-no-like
+              servicePort: 80
+    ```
     
     ```
     $ kubectl apply -f app/manifests/lab4.ingress.yaml $MM
     ```
     
-    Redeploy the Mythical mysfits website to use the ingress
+    If you are curious, you can look at the ALB in the EC2 console to see what the Ingress controller has done for us. You will see that rules have dynamically been added to the ALB to correspond with the above directives.
+    
+    [ALB created for you](images/04-alb.png)
+    [ALB rules created for you](images/04-albrules.png)
+    
+    Redeploy the Mythical mysfits website to use the ingress. This will update the API endpoint in the website to point at the ingress (rather than the NLB from the previous lab).
     
     ```
     $ script/upload-site.sh
@@ -948,11 +1000,12 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
 
     Use the tag `nolike2` now instead of `nolike`.
 
-    <pre>
-    $ docker build -t monolith-service:nolike2 .
-    $ docker tag monolith-service:nolike2 <b><i>ECR_REPOSITORY_URI</i></b>:nolike2
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:nolike2
-    </pre>
+    ```
+    $ cd app/monolith-service
+    $ cd app/monolith-service/ && docker build -t monolith-service:nolike -f Dockerfile4.solved . && cd -
+    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolikev2
+    $ docker push $ECR_MONOLITH:nolikev2
+    ```
 
     If you look at the monolith repository in ECR, you'll see the pushed image tagged as `nolike2`:
 
@@ -970,6 +1023,10 @@ This is really important because if you leave stuff running in your account, it 
 Delete manually created resources throughout the labs:
 
 * ECR - delete any Docker images pushed to your ECR repository.
-* CloudWatch logs groups
 
-Finally, [delete the CloudFormation stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
+Finally, [delete the CDK stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
+
+    ```
+    $ poetry run cdk destroy mythicalstack --require-approval never
+    $ poetry run cdk destroy mythicaldistribution --require-approval never
+    ```
