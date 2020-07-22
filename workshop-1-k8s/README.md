@@ -114,12 +114,13 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::ACCOUNT_ID:assumed-role/<i>mysfits-cloud9-C9Role</i>-1F2WMFHBSLUSY/i-0d83a4808c97ef448". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
     
     ```
-    aws sts get-caller identity
+    aws sts get-caller-identity
     ```
 
 6. Resize the volume. The default Cloud9 instance comes with 10GB of space. As we are going to be downloading a lot of container images this won't be sufficient. Rune the following command to resize to 20GB
 
     ```
+    export AWS_DEFAULT_REGION=ap-southeast-1
     $ script/resize.sh 20
     ```
 
@@ -167,7 +168,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ cd ..
     $ export AWS_DEFAULT_REGION=ap-southeast-1
     $ script/install_kubectl.sh
-    $ script/setup
+    $ script/setup.sh
     $ source .environ
     ```
 
@@ -675,9 +676,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     ![SecurityGroups](images/02-securitygroup.png)
     
-    Now let's try again.
-
-    If the curl command was successful, we are now ready to scale the service
+    Now let's try again. If the curl command was successful, we are now ready to scale the service
 
 ## Lab 3 - Scale the adoption platform monolith with an NLB
 
@@ -718,9 +717,9 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
     metadata:
         name: mysfits-service
-    annotations:
-        #UPDATE the spec to NLB
-        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        annotations:
+            #UPDATE the spec to NLB
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
     spec:
         # Update the spec to be of type Loadbalancer
         type: LoadBalancer

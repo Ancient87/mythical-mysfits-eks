@@ -22,7 +22,7 @@ API_ENDPOINT=$(kubectl get ingress/mysfits-ingress $MM -o json | jq -er '.status
 
 if [[ -z $API_ENDPOINT ]]; then
   echo "No ingress yet"
-  API_ENDPOINT=$(kubectl get ingress/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
+  API_ENDPOINT=$(kubectl get service/mysfits-service $MM -o json | jq -er '.status.loadBalancer.ingress[0].hostname')
 fi
 
 echo $API_ENDPOINT
