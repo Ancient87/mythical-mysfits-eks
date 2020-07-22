@@ -593,9 +593,9 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     <details>
     <summary>HINT: Container image definition</summary>
     Each pod spec 
-    <pre>
+    ```
     $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
-    </pre>
+    ```
     </details>
     
 
