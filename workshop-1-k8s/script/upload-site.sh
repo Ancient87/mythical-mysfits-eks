@@ -52,4 +52,4 @@ $sed_cmd -i $sed_prog $TEMP_DIR/confirm.html
 aws s3 sync $TEMP_DIR s3://$BUCKET_NAME
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths="/"
 
-echo "export MYTHICAL_WEBSITE=https://$WEBSITE" >> .environ
+echo "export MYTHICAL_WEBSITE=http://$WEBSITE" >> .environ

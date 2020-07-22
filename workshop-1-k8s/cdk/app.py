@@ -305,8 +305,10 @@ class MythicalDistributionStack(core.Stack):
                         comment="SPA CF OAI",
                       ),
                     ),
-                )
+                ),
+                
             ],
+            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.ALLOW_ALL,
             error_configurations=[
               {
                 "errorCachingMinTtl": 0.0,
