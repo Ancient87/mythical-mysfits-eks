@@ -884,13 +884,13 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
 
     The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It makes use of the Kubernetes internal service discovery [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) so no additional environment variables are needed. In Kubernetes by default every service (within a namespace) can be resolved under <i>my-svc.my-namespace.svc.cluster-domain.example</i>. In our case, the like service will find the monolith under http://mysfits-service-no-like
     
-    Refer to app/manifests/monolith.lab4.draft.y,l and like.lab4.draft.yaml . As per last time fill in the correct references to your images and DynamoDB tables.
+    Refer to app/manifests/monolith.lab4.draft.yml and like.lab4.draft.yml. As per last time fill in the correct references to your images and DynamoDB tables.
     
     Once done copy them to remove "draft" and apply them:
     
     ```
     $ cp app/manifests/monolith.lab4.draft.yml app/manifests/monolith.lab4.yml
-    $ cp app/manifests/monolith.lab3.draft.yml app/manifests/monolith.lab3.yml
+    $ cp app/manifests/like.lab4.draft.yml app/manifests/like.lab4.yml
     $ kubectl apply -f app/manifests/monolith.lab4.yml $MM  
     $ kubectl apply -f app/manifests/like.lab4.yml $MM  
     ```
@@ -947,10 +947,10 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     Deploy the ALB ingress controller. This is provided by AWS so setup ALBs as ingress for Kubernetes.
     
     ```
-    $ kubectl apply -f app/manifests/alb-ingress-controller.yaml $MM --namespace=kube-system
+    $ kubectl apply -f app/manifests/alb-ingress-controller.yml $MM --namespace=kube-system
     ```
     
-    Deploy the Mythical mysfits ingress. This will configure the path routing to point at the services. In our case we want the following which is contained in lab4.ingress.yaml This will cause like requests to go to our new like service and everything else to the monolith (minus the like service)
+    Deploy the Mythical mysfits ingress. This will configure the path routing to point at the services. In our case we want the following which is contained in lab4.ingress.yml This will cause like requests to go to our new like service and everything else to the monolith (minus the like service)
     
     ```
     - http:
@@ -966,7 +966,7 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     ```
     
     ```
-    $ kubectl apply -f app/manifests/lab4.ingress.yaml $MM
+    $ kubectl apply -f app/manifests/lab4.ingress.yml $MM
     ```
     
     If you are curious, you can look at the ALB in the EC2 console to see what the Ingress controller has done for us. You will see that rules have dynamically been added to the ALB to correspond with the above directives.
