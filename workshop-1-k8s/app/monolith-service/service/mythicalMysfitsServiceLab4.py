@@ -9,6 +9,8 @@ import sys
 app = Flask(__name__)
 CORS(app)
 
+app.logger.warning(f"Here we go v4")
+
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
 @app.route("/")

@@ -11,10 +11,10 @@ import logging
 app = Flask(__name__)
 CORS(app)
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
-print(f"Here we go v10", file=sys.stderr)
-
+#print(f"Here we go v10", file=sys.stderr)
+#app.logger.warning(f"Here we go")
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
 @app.route("/")
@@ -26,21 +26,20 @@ def process_like_request():
     print('Like processed.', file=sys.stderr)
 
 def fulfill_like(mysfit_id):
-    print(f"Fulfill The request {mysfit_id}", file=sys.stderr)
-    url_s = f"http://{os.environ['MONOLITH_URL']}/mysfits/{mysfit_id}/fulfill-like"
-    print(url_s)
+    app.logger.warn(f"Fulfill The request {mysfit_id}")
+    url_s = f"http://mysfits-service-monolith-nolike/mysfits/{mysfit_id}/fulfill-like"
+    #url_s = f"http://{os.environ['MONOLITH_URL']}/mysfits/{mysfit_id}/fulfill-like"
+    app.logger.warn(url_s)
     url = urlparse(url_s)
     return requests.post(url=url.geturl())
 
 @app.route("/mysfits/<mysfit_id>/like", methods=['POST'])
 def like_mysfit(mysfit_id):
     process_like_request()
-    print('Like being processed.', file=sys.stderr)
-    print(f"Here we go like", file=sys.stderr)
-    print(f"The request {mysfit_id}", file=sys.stderr)
-    app.logger.info(f"The request {mysfit_id}")
+    app.logger.warning(f"The request {mysfit_id}")
     
     service_response = fulfill_like(mysfit_id)
+    #app.logger.warning(f"The resp {service_response}")
 
     flask_response = Response(service_response)
     flask_response.headers["Content-Type"] = "application/json"

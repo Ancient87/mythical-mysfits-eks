@@ -13,12 +13,16 @@ spec:
     #- host: glumanda.com
     - http:
         paths:
-          - path: /mysfits/*/like/
+          - path: /mysfits/*/like
             backend: 
               serviceName: mysfits-service-like
               servicePort: 80
-          - path: /mysfits
+          - path: /mysfits*
             backend:
-              serviceName: mysfits-service
+              serviceName: mysfits-service-monolith-nolike
               servicePort: 80
+          #- path: /mysfits/*
+          #  backend:
+          #    serviceName: mysfits-service-monolith-nolike
+          #    servicePort: 80
           
