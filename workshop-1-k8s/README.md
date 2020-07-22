@@ -586,19 +586,27 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     ```
 
-2. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image
+2. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
-    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier.
+    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
     
-    <details>
-    <summary>HINT: Container image definition</summary>
     ```
-    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
+    containers:
+        - name: mysfits-monolith
+          #UPDATE REPO AND VERSION HERE
+          image: <b>YOUR$ECR_MONOLITH:latest</b>
+          ports:
+            - containerPort: 80
+          env:
+          #UPDATE REGION AND TABLE HERE!
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
+          - name: DDB_TABLE_NAME
+            <b>value: YOUR$DDB_TABLE_NAME</b>
     ```
-    </details>
     
 
-3. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
+3. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and paste it into your shell:
 
     It may looks comething like this
     <pre>
