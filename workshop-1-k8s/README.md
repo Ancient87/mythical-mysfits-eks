@@ -965,8 +965,9 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     
     If you are curious, you can look at the ALB in the EC2 console to see what the Ingress controller has done for us. You will see that rules have dynamically been added to the ALB to correspond with the above directives.
     
-    [ALB created for you](images/04-alb.png)
-    [ALB rules created for you](images/04-albrules.png)
+    ![ALB created for you](images/04-alb.png)
+    
+    ![ALB rules created for you](images/04-albrules.png)
     
     Redeploy the Mythical mysfits website to use the ingress. This will update the API endpoint in the website to point at the ingress (rather than the NLB from the previous lab).
     
@@ -1026,7 +1027,7 @@ Delete manually created resources throughout the labs:
 
 Finally, [delete the CDK stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
 
-    ```
-    $ poetry run cdk destroy mythicalstack --require-approval never
-    $ poetry run cdk destroy mythicaldistribution --require-approval never
-    ```
+```
+$ poetry run cdk destroy mythicalstack --require-approval never
+$ poetry run cdk destroy mythicaldistribution --require-approval never
+```
