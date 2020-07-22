@@ -588,7 +588,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
 2. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
-    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
+    Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
     
     ```
     containers:
