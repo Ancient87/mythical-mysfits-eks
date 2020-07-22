@@ -200,7 +200,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
 ### Checkpoint:
-At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
 
 ![initial website](images/00-website.png)
 
@@ -569,7 +569,7 @@ Containter definition parameters map to options and arguments passed to the [doc
 
 In this lab, you will create a pod and deployment definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with Kubernetes. You will be using a managed worker node group in this setup.
 
-EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
+EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like pod specific security groups.  Let's get started!
 
 ![Lab 2 Architecture](images/02-arch.png)
 
@@ -592,16 +592,14 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     <details>
     <summary>HINT: Container image definition</summary>
-    
     Each pod spec 
     <pre>
     $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
     </pre>
-    
     </details>
     
 
-3. Before we can use the Kubernetes cluster we need to setup the kubectl cli     to login to it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
+3. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
 
     It may looks comething like this
     <pre>
@@ -672,7 +670,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
     Uh oh. That didn't work! Why is that? The reason is that we need to manually update the worker node's security group to allow access from the Internet to this port. That doesn't seem ideal and it isn't but don't worry we will address this challenge shortly. For now, go to the EC2 console and update the security group to permit access from your current IP on the high port the service is listening on.
     
-    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port.
+    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port. <b>N.B: The IP from you Cloud9 desktop will be different than the one you have in your web browser and that is displayed in the console!</b>
     
     ![SecurityGroups](images/02-securitygroup.png)
     
@@ -701,7 +699,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     ```
     
     ### Checkpoint:
-    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
     ![initial website](images/00-website.png)
     
 
@@ -737,9 +735,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     kubectl apply -f app/manifests/monolith.yml $MM
     ```
     
-    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name.
-    
-    Type the below to see the hostname of your load balancer
+    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name. This also solves the security group problem from earlier because now Kubernetes automatically takes care of opening the right ports. Type the below to see the hostname of your load balancer:
     
     ```
     kubectl get service/mysfits-service $MM
