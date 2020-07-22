@@ -919,7 +919,7 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
     Redeploy the Mythical mysfits website to use the ingress
     
     ```
-    $ script/upload-site.sh 
+    $ script/upload-site.sh
     ```
 
 7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the pod  logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!

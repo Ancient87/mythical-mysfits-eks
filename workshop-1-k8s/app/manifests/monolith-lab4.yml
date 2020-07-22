@@ -26,7 +26,7 @@ spec:
       containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-fripm24803l0:nolikev4
+          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-fripm24803l0:nolikev1
           ports:
             - containerPort: 80
           env:
@@ -43,7 +43,7 @@ apiVersion: v1
 kind: Service
 
 metadata:
-  name: mysfits-service-monolith-nolike
+  name: mysfits-service-no-like
   namespace: mysfits
   annotations:
     #UPDATE the spec to NLB

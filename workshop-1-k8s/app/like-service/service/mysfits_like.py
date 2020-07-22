@@ -27,7 +27,7 @@ def process_like_request():
 
 def fulfill_like(mysfit_id):
     app.logger.warn(f"Fulfill The request {mysfit_id}")
-    url_s = f"http://mysfits-service-monolith-nolike/mysfits/{mysfit_id}/fulfill-like"
+    url_s = f"http://mysfits-service-no-like/mysfits/{mysfit_id}/fulfill-like"
     #url_s = f"http://{os.environ['MONOLITH_URL']}/mysfits/{mysfit_id}/fulfill-like"
     app.logger.warn(url_s)
     url = urlparse(url_s)

@@ -21,7 +21,7 @@ spec:
       containers:
         - name: mysfits-like
           #UPDATE REPO AND VERSION HERE
-          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:v3
+          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:v1
           ports:
             - containerPort: 80
           env:
