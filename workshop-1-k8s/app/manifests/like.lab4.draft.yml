@@ -21,16 +21,13 @@ spec:
       containers:
         - name: mysfits-like
           #UPDATE REPO AND VERSION HERE
-          image: 732419410732.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-like1-13rmgjzfl0ble:v1
+          image: YOUR$ECR_LIKE:v1
           ports:
             - containerPort: 80
           env:
           #UPDATE REGION AND TABLE HERE!
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
-          ##YOUR $MYTHICAL_WEBSITE xxxyyyzzzz.cloudfront.net DO NOT INCLUDE "http"
-          #- name: MONOLITH_URL
-          #  value: 2e300321-mysfits-mysfitsin-fbed-1280039412.ap-southeast-1.elb.amazonaws.com
       # Needed for IAM roles
       securityContext:
         fsGroup: 1337
