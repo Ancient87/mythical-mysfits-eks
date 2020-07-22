@@ -217,6 +217,14 @@ class MythicalStack(core.Stack):
         
         worker_node_role = mythical_eks_nodegroup.role
         
+        worker_node_role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name(
+                "AmazonElasticFileSystemFullAccess"
+            )
+        )
+        
+        
+        
         mythical_eks_cluster_role = mythical_eks_cluster.role
     
         mythical_eks_cluster_role.add_managed_policy(
