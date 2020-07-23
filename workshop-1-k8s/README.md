@@ -224,7 +224,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     One of the Mythical Mysfits' developers started working on a Dockerfile in her free time, but she was pulled to a high priority project before she finished.
 
-    In the Cloud9 file tree, navigate to `workshop-1/app/monolith-service`, and double-click on **Dockerfile.draft** to open the file for editing.
+    In the Cloud9 file tree, navigate to `/app/monolith-service`, and double-click on **Dockerfile.draft** to open the file for editing.
 
     *Note: If you would prefer to use the bash shell and a text editor like vi or emacs instead, you're welcome to do so.*
 
@@ -272,7 +272,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     <pre>
     FROM ubuntu:latest
     RUN apt-get update -y
-    RUN apt-get install -y python-pip python-dev build-essential
+    RUN apt-get install -y python3-pip python-dev build-essential
     RUN pip install --upgrade pip
     COPY ./service /MythicalMysfitsService
     WORKDIR /MythicalMysfitsService
@@ -506,9 +506,9 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Here's sample output from these commands:
     
     <pre>
-    $ docker tag monolith-service:latest 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    $ docker push 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    The push refers to a repository [873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
+    $ docker tag monolith-service:latest ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    $ docker push ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    The push refers to a repository [ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
     0f03d692d842: Pushed
     ddca409d6822: Pushed
     d779004749f3: Pushed
