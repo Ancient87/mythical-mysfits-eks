@@ -102,6 +102,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 5.  Setup the credentials in Cloud9. Run the below script to associate the instance role 
 
     ```
+    $ export AWS_DEFAULT_REGION=ap-southeast-1
     $ script/associate-profile.sh
     ```
     
@@ -147,13 +148,13 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ poetry run cdk bootstrap
     ```
 
-7. A kick-off deployment of the website <b>Step 7 and 8 are to be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
+8. A kick-off deployment of the website <b>Step 8 and 9 are to be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
     
     ```
     $ poetry run cdk deploy mythicaldistributionstack --require-approval never
     ```
 
-8.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+9.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
 
     Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break. <b>Once step 8 is complete you can move on </b>
     
@@ -162,7 +163,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
     
 
-9. Run some additional automated setup steps with the `setup` script:
+10. Run some additional automated setup steps with the `setup` script:
 
     ```
     $ cd ..
@@ -187,7 +188,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
 
-10. Login to your container repository
+11. Login to your container repository
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
