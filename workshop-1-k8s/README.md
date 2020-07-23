@@ -3,7 +3,7 @@ Monolith to Microservices with Docker and AWS EKS
 
 Welcome to the Mythical Mysfits team!
 
-In this lab, you'll build the monolithic Mythical Mysfits adoption platform with Docker, deploy it on Amazon ECS, and then break it down into a couple of more manageable microservices. Let's get started!
+In this lab, you'll build the monolithic Mythical Mysfits adoption platform with Docker, deploy it on Amazon EKS, and then break it down into a couple of more manageable microservices. Let's get started!
 
 ### Requirements:
 
@@ -201,11 +201,9 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
 ### Checkpoint:
-At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+At this point, the Mythical environment will be setup. You can proceed with Lab1
 
-![initial website](images/00-website.png)
-
-[*^ back to top*](#monolith-to-microservices-with-docker-and-aws-fargate)
+[*^ back to top*](#monolith-to-microservices-with-docker-and-aws-eks)
 
 
 ## Lab 1 - Containerize the Mythical Mysfits adoption agency platform
