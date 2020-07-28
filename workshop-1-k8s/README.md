@@ -50,8 +50,27 @@ We are assuming this workshop is run in the ap-southeat-1 (Singapore) region. Ca
 
 You will be deploying infrastructure on AWS which will have an associated cost. If you're attending an AWS event, credits will be provided.  When you're done with the workshop, [follow the steps at the very end of the instructions](#workshop-cleanup) to make sure everything is cleaned up and avoid unnecessary charges.
 
-
 ## Let's Begin!
+
+### Important Note please read:
+
+1.This workshop makes use of **environment variables** throughout 
+
+Whenever you see a command or instruction containg <b>$SOME_VARIABLE</b> this refers to the content of an environment variable. These variables will be set by scripts which you will be asked to execute as you progress. 
+
+In order to set the environment variables we will ask you to *source* them from a file called *.environ*. This file will be created later in the instructions. Whenever you open a new shell or terminal window you will need to repeat this by executing **$ source .environ**
+
+If a command you type doesn't work and it contains an environment variable please double check you have sourced the variables.
+
+You can check if an environment variable has been set or what the content of it is by executing
+    
+    ```
+    $ echo $SOME_VARIABLE_NAME
+    ```
+    
+2. File locations and paths
+
+The command instructions assume that you are executing these commands from the Workshop 1 directory. If you get any file not found errors during the labs please ensure you are executing the commands from **~/environment/sc-eks-workshop/workshop-1-k8s/**
 
 ### Workshop Setup:
 
@@ -99,7 +118,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ cd mythical-mysfits-eks/workshop-1-k8s
     ```
 
-5.  Setup the credentials in Cloud9. Run the below script to associate the instance role 
+5.  Setup the credentials in Cloud9. Run the below script to associate the instance role. This script will assign an IAM role to your instance.
 
     ```
     $ export AWS_DEFAULT_REGION=ap-southeast-1
@@ -118,10 +137,9 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     aws sts get-caller-identity
     ```
 
-6. Resize the volume. The default Cloud9 instance comes with 10GB of space. As we are going to be downloading a lot of container images this won't be sufficient. Rune the following command to resize to 20GB
+6. Resize the volume. The default Cloud9 instance comes with 10GB of space. As we are going to be downloading a lot of container images this won't be sufficient. Run the following command to resize the EBS volume and file system to 20GB
 
     ```
-    export AWS_DEFAULT_REGION=ap-southeast-1
     $ script/resize.sh 20
     ```
 
@@ -174,9 +192,9 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ source .environ
     ```
 
-    This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
+    This script will populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
     
-    The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
+    As mentioned above, the ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
     
     Next, please run following command to generate SSH Key in Cloud9. This key will be used later in stateful microservices with EFS lab.
     ```
@@ -187,12 +205,14 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
     aws ec2 import-key-pair --key-name "eksworkshop" --public-key-material file://~/.ssh/id_rsa.pub
     ```
+    
+11. Login to your container repositories
 
-
-11. Login to your container repository
+    The stack created two repositories for you one for the monolith and one for the like service. Login to these now by using the following commands
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
+    aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_LIKE
     ```
     
     You should see 
@@ -274,12 +294,13 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     FROM ubuntu:latest
     RUN apt-get update -y
     RUN apt-get install -y python3-pip python-dev build-essential
-    RUN pip install --upgrade pip
+    RUN pip3 install --upgrade pip
+    COPY service/requirements.txt .
+    RUN pip3 install --no-cache-dir -r ./requirements.txt
     COPY ./service /MythicalMysfitsService
     WORKDIR /MythicalMysfitsService
-    RUN pip install -r ./requirements.txt
     EXPOSE 80
-    ENTRYPOINT ["python"]
+    ENTRYPOINT ["python3"]
     CMD ["mythicalMysfitsService.py"]
     </pre>
     </details>
@@ -591,15 +612,16 @@ kubectl describe service/mysfits-service $MM  #
 
 1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
-    Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
+Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
+
+Copy the monolith.lab1.draft.yml file to monolith.yml, and then make the changes.
     
-    ```
     ...
     
     containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: <b>YOUR$ECR_MONOLITH:latest</b>
+          image: CONTENTS_OF_$ECR_MONOLITH:latest
           ports:
             - containerPort: 80
           env:
@@ -607,20 +629,14 @@ kubectl describe service/mysfits-service $MM  #
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
           - name: DDB_TABLE_NAME
-            <b>value: YOUR$DDB_TABLE_NAME</b>
+            value: CONTENTS_OF_$DDB_TABLE_NAME
             
     ...
-    ```
     
 
-2. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and paste it into your shell:
-
-    It may looks comething like this
-    <pre>
-    mythicalstack.mythicaleksclusterConfigCommand8881EF53 = aws eks update-kubeconfig --name mythical_eks_cluster --region ap-southeast-1 --role-arn arn:aws:iam::547168898833:role/mythicalstack-adminroleDBD57144-JF0TWARTXDPF --alias mythicalcluster
-    </pre>
+2. Now we are ready to deploy to Kubernetes
     
-    Once done, test that it worked 
+    The setup script you ran earlier configured the kubectl context for you. Test now that this worked.
     
     ```
     $ kubectl get nodes $MM
@@ -628,15 +644,13 @@ kubectl describe service/mysfits-service $MM  #
     
     Your output will look something like the following
     
-    <pre>
+    ```
     NAME                                            STATUS   ROLES    AGE     VERSION
     ip-10-0-48-4.ap-southeast-1.compute.internal    Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
     ip-10-0-66-62.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
     ip-10-0-95-74.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
-    </pre>
+    ```
 
-3. Once this is set we can deploy to Kubernetes
-    
     The following command apply the manifest definition to Kuberntes.
     The result will be, for now, 1 pod running your container image.
 
@@ -706,14 +720,14 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
 1. Finish deploying the website:
 
-    If you recall, earlier we kicked off the deployment of the static Cloudfront site for the Mythical Mysfits. By now that stack should have completed, and we can deploy and refresh our environment variables.
+    If you recall, earlier we kicked off the deployment of the static Cloudfront site for the Mythical Mysfits. By now that stack should have completed, and we can redeploy and refresh our environment variables.
     
     ```
     script/upload-site.sh 
     ```
     
     ### Checkpoint:
-    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>http://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
     ![initial website](images/00-website.png)
     
 
@@ -721,7 +735,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
     
-    Modify your monolith.yml service as follows and take note of the change of type.
+    Modify the service defined in your monolith.yml (from the previous lab) as follows and take note of the type changing from NodePort to LoadBalancer.
     
     ```
     apiVersion: v1
@@ -775,7 +789,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
 4.  Re-upload the website to point at our service.
     
-    Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
+    Remember you can access the website at <code>http://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
     
     We have provided a script to update the website with the mysfits service load balancer name and to redeploy. Execute this now
     
@@ -887,7 +901,7 @@ As with the monolith, you'll be using Deployments to deploy these microservices,
 
     The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It makes use of the Kubernetes internal service discovery [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) so no additional environment variables are needed. In Kubernetes by default every service (within a namespace) can be resolved under <i>my-svc.my-namespace.svc.cluster-domain.example</i>. In our case, the like service will find the monolith under http://mysfits-service-no-like
     
-    Refer to app/manifests/monolith.lab4.draft.yml and like.lab4.draft.yml. As per last time fill in the correct references to your images and DynamoDB tables.
+    Refer to app/manifests/monolith.lab4.draft.yml and like.lab4.draft.yml. As per last time ** don't forget to fill in the correct references to your images and DynamoDB tables**.
     
     Once done copy them to remove "draft" and apply them:
     

@@ -48,7 +48,7 @@ metadata:
     #UPDATE the spec to NLB
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: mysfits
     

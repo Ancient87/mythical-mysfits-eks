@@ -20,5 +20,8 @@ echo "export DDB_TABLE_NAME=$TABLE_NAME" > .environ
 echo "export ECR_MONOLITH=$ECR_MONOLITH" >> .environ
 echo "export ECR_LIKE=$ECR_LIKE" >> .environ
 echo "export AWS_DEFAULT_REGION=ap-southeast-1" >> .environ
-echo "export MYTHICAL_KUBE_CONFIG='$CONFIG_KUBECTL --alias mythicalcluster'" >> .environ
+MMC="$CONFIG_KUBECTL --alias mythicalcluster"
+echo "export MYTHICAL_KUBE_CONFIG=$MMC" >> .environ
 echo "export MM='--namespace mysfits --context mythicalcluster'" >> .environ
+
+eval $MMC
