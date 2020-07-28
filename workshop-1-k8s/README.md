@@ -130,7 +130,7 @@ The command instructions assume that you are executing these commands from the W
     
     ![Disable temporary credentials](images/00-cloud9-temp2.png)
     
-    Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::ACCOUNT_ID:assumed-role/<i>mysfits-cloud9-C9Role</i>-1F2WMFHBSLUSY/i-0d83a4808c97ef448". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
+    Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::***ACCOUNT_ID***:assumed-role/<i>mysfits-cloud9-C9Role</i>-***1F2WMFHBSLUSY/i-0d83a4808c97ef448***". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
     
     ```
     aws sts get-caller-identity
@@ -608,7 +608,7 @@ kubectl describe service/mysfits-service $MM  #
 
 1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
-Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
+Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
 
 Copy the monolith.lab1.draft.yml file to monolith.yml, and then make the changes.
     
@@ -617,7 +617,7 @@ Copy the monolith.lab1.draft.yml file to monolith.yml, and then make the changes
     containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: CONTENTS_OF_$ECR_MONOLITH:latest
+          image: ***$ECR_MONOLITH***:latest
           ports:
             - containerPort: 80
           env:
@@ -625,7 +625,7 @@ Copy the monolith.lab1.draft.yml file to monolith.yml, and then make the changes
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
           - name: DDB_TABLE_NAME
-            value: CONTENTS_OF_$DDB_TABLE_NAME
+            value: ***$DDB_TABLE_NAME***
             
     ...
     
@@ -723,7 +723,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     ```
     
     ### Checkpoint:
-    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>http://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>http://***$MYTHICAL_WEBSITE***</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
     ![initial website](images/00-website.png)
     
 
@@ -759,7 +759,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     kubectl apply -f app/manifests/monolith.yml $MM
     ```
     
-    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name. This also solves the security group problem from earlier because now Kubernetes automatically takes care of opening the right ports. Type the below to see the hostname of your load balancer:
+    Something interesting is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name. This also solves the security group problem from earlier because now Kubernetes automatically takes care of opening the right ports. Type the below to see the hostname of your load balancer:
     
     ```
     kubectl get service/mysfits-service $MM
