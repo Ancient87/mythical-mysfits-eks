@@ -153,9 +153,6 @@ The command instructions assume that you are executing these commands from the W
     
     ```
     $ sudo pip install poetry
-    ```
-    
-    ```
     $ poetry install
     ```
     
@@ -167,13 +164,13 @@ The command instructions assume that you are executing these commands from the W
 
 8.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
 
-    Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break. <b>Once step 8 is complete you can move on </b>
+    Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break.
     
     ```
     $ poetry run cdk deploy mythicalstack --require-approval never
     ```
 
-9. A kick-off deployment of the website <b>Step 8 and 9 can be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
+9. Kick-off deployment of the website. <b>Step 8 and 9 can be done in In parallel</b> This takes about 10 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
     
     ```
     $ poetry run cdk deploy mythicaldistributionstack --require-approval never
