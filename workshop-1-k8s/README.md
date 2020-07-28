@@ -50,13 +50,9 @@ We are assuming this workshop is run in the ap-southeat-1 (Singapore) region. Ca
 
 You will be deploying infrastructure on AWS which will have an associated cost. If you're attending an AWS event, credits will be provided.  When you're done with the workshop, [follow the steps at the very end of the instructions](#workshop-cleanup) to make sure everything is cleaned up and avoid unnecessary charges.
 
-## Let's Begin!
+### IMPORTANT: Environment Variables:
 
-### Important Note please read:
-
-1.This workshop makes use of **environment variables** throughout 
-
-Whenever you see a command or instruction containg <b>$SOME_VARIABLE</b> this refers to the content of an environment variable. These variables will be set by scripts which you will be asked to execute as you progress. 
+The instructions in this workshop make use of **environment variables** throughout. Whenever you see a command or instruction containg <b>$SOME_VARIABLE</b> this refers to the content of an environment variable. These variables will be set by scripts which you will be asked to execute as you progress. 
 
 In order to set the environment variables we will ask you to *source* them from a file called *.environ*. This file will be created later in the instructions. Whenever you open a new shell or terminal window you will need to repeat this by executing **$ source .environ**
 
@@ -67,10 +63,13 @@ You can check if an environment variable has been set or what the content of it 
     ```
     $ echo $SOME_VARIABLE_NAME
     ```
-    
-2. File locations and paths
 
+### IMPORTANT: File Paths:    
 The command instructions assume that you are executing these commands from the Workshop 1 directory. If you get any file not found errors during the labs please ensure you are executing the commands from **~/environment/sc-eks-workshop/workshop-1-k8s/**
+
+
+## Let's Begin!
+
 
 ### Workshop Setup:
 
