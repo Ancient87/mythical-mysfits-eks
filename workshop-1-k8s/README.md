@@ -148,20 +148,21 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ poetry run cdk bootstrap
     ```
 
-8. A kick-off deployment of the website <b>Step 8 and 9 are to be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
-    
-    ```
-    $ poetry run cdk deploy mythicaldistributionstack --require-approval never
-    ```
-
-9.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+8.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
 
     Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break. <b>Once step 8 is complete you can move on </b>
     
     ```
     $ poetry run cdk deploy mythicalstack --require-approval never
     ```
+
+9. A kick-off deployment of the website <b>Step 8 and 9 can be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
     
+    ```
+    $ poetry run cdk deploy mythicaldistributionstack --require-approval never
+    ```
+    
+    **Please do not proceed to step 10 until step 8 is complete!**
 
 10. Run some additional automated setup steps with the `setup` script:
 
@@ -574,7 +575,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
 ### Instructions:
 
-1. Before we get started we will introduce a few helpful troubleshooting commands for Kubernetes. You may find these helpful whilst trying to go through the rest of this lab. Everything after the "#" can be ignored
+**For information only** Before we get started we will introduce a few helpful troubleshooting commands for Kubernetes. You may find these helpful whilst trying to go through the rest of this lab. Everything after the "#" can be ignored
 
     ```
     kubectl get endpoints mysfits-service $MM  # See which pods have been selected for a given service. An empty list indicates an issue
@@ -585,7 +586,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     ```
 
-2. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
+1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
     Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
     
