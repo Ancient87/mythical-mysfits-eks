@@ -98,92 +98,6 @@ class MythicalStack(core.Stack):
             value=mythical_table.table_name,
         )
         
-        ######## S3 #######
-        
-        
-        
-        
-        mythical_bucket = s3.Bucket(
-            self,
-            "mythical_bucket",
-            removal_policy=core.RemovalPolicy.DESTROY,
-        )
-        
-        
-
-        distribution = cloudfront.CloudFrontWebDistribution(
-            self,
-            "dist",
-            origin_configs=[
-                cloudfront.SourceConfiguration(
-                    behaviors=[cloudfront.Behavior(is_default_behavior=True)],
-                    s3_origin_source=cloudfront.S3OriginConfig(
-                      s3_bucket_source=mythical_bucket,
-                      origin_access_identity=cloudfront.OriginAccessIdentity(
-                        self,
-                        "spaoai",
-                        comment="SPA CF OAI",
-                      ),
-                    ),
-                )
-            ],
-            error_configurations=[
-              {
-                "errorCachingMinTtl": 0.0,
-                "errorCode": 404,
-                "responseCode": 200,
-                "responsePagePath": "/index.html"
-              },
-              {
-                "errorCachingMinTtl": 0.0,
-                "errorCode": 403,
-                "responseCode": 200,
-                "responsePagePath": "/index.html"
-              },
-            ],
-        )
-        
-        #spa_source = s3d.Source.asset(
-        #  path = "../web",
-        #  #path="../frontend/",
-        #  #bundling=core.BundlingOptions(
-        #  #  image=core.BundlingDockerImage.from_registry("bayesimpact/react-base"),
-        #  #  command=["make", "build-prod-cloud"],
-        #  #  user="root",
-        #  #),
-        #)
-      #
-        #self.spa_deployment = s3d.BucketDeployment(
-        #  self,
-        #  "spadeploy",
-        #  destination_bucket=mythical_bucket,
-        #  sources=[spa_source],
-        #  distribution=distribution,
-        #  #server_side_encryption=s3d.ServerSideEncryption.AWS_KMS,
-        #  #server_side_encryption_aws_kms_key_id=self.bucket_key.key_id,
-        #)
-        
-        output_cf = core.CfnOutput(
-            self,
-            "mythical_website",
-            export_name="S3WebsiteURL",
-            value=distribution.domain_name,
-        )
-        
-        output_cf = core.CfnOutput(
-            self,
-            "mythical_distribution",
-            export_name="mythicaldistributionoutput",
-            value=distribution.distribution_id,
-        )
-        
-        output_bucket = core.CfnOutput(
-            self,
-            "mythical_bucket_output",
-            export_name="mythicalwebsite",
-            value=mythical_bucket.bucket_name,
-        )
-        
         ######## VPC ########
         
         mythical_cluster_vpc = ec2.Vpc(
@@ -232,6 +146,17 @@ class MythicalStack(core.Stack):
             version=eks.KubernetesVersion.V1_16,
         )
         
+        cluster_role = mythical_eks_cluster.role
+        
+        cluster_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ec2:DescribeAccountAttributes",
+                "ec2:DescribeInternetGateways",],
+                resources=["*"],
+            )    
+        )
+        
         mythical_namespace_definition = {
             "apiVersion": "v1",
             "kind": "Namespace",
@@ -257,9 +182,25 @@ class MythicalStack(core.Stack):
             namespace="mysfits",
         )
         
-        #mythical_service_account.node.default_child.addDependsOn(
-        #    mythical_namespace.node.default_child    
-        #)
+        alb_service_account = eks.ServiceAccount(
+            self,
+            "albserviceaccount",
+            cluster=mythical_eks_cluster,
+            name="alb-ingress-controller",
+            namespace="kube-system",
+        )
+        
+        alb_role = alb_service_account.role
+        
+        pol_statement = None
+        
+        with open("./alb-policy.json", "r") as policy_file:
+            pol_string = policy_file.read()
+            pol_json = json.loads(pol_string)
+            statements = pol_json["Statement"]
+            for statement in statements:
+                pol_statement = iam.PolicyStatement.from_json(statement)
+                alb_role.add_to_policy(pol_statement)
         
         
         mythical_table.grant_read_write_data(mythical_service_account.role)
@@ -276,22 +217,13 @@ class MythicalStack(core.Stack):
         
         worker_node_role = mythical_eks_nodegroup.role
         
-        #worker_node_role.add_managed_policy(
-        #    iam.ManagedPolicy.from_aws_managed_policy_name(
-        #        "policy/AmazonEKSWorkerNodePolicy",
-        #    )
-        #)
+        worker_node_role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name(
+                "AmazonElasticFileSystemFullAccess"
+            )
+        )
         
-        #mythical_eks_cluster = eks.FargateCluster(
-        #    self,
-        #    "mythicalekscluster",
-        #    cluster_name="mythical_eks_cluster",
-        #    vpc=mythical_cluster_vpc,
-        #    #vpc_subnets=[ec2.SubnetSelection(
-        #    #    subnet_type=ec2.SubnetType.PUBLIC,    
-        #    #)],
-        #    version=eks.KubernetesVersion.V1_16,
-        #)
+        
         
         mythical_eks_cluster_role = mythical_eks_cluster.role
     
@@ -341,12 +273,95 @@ class MythicalStack(core.Stack):
             export_name="mythical-like-repository",
             value=ecr_like.repository_uri
         )
+        
+class MythicalDistributionStack(core.Stack):
 
-MythicalStack(
+    def __init__(
+        self,
+        scope: core.Construct,
+        id: str,
+        **kwargs,
+    ) -> None:
+
+        super().__init__(scope, id, **kwargs)
+        
+        mythical_bucket = s3.Bucket(
+            self,
+            "mythical_bucket",
+            removal_policy=core.RemovalPolicy.DESTROY,
+        )
+        
+        output_bucket = core.CfnOutput(
+            self,
+            "mythical_bucket_output",
+            export_name="mythicalwebsite",
+            value=mythical_bucket.bucket_name,
+        )
+        
+        
+        distribution = cloudfront.CloudFrontWebDistribution(
+            self,
+            "dist",
+            origin_configs=[
+                cloudfront.SourceConfiguration(
+                    behaviors=[cloudfront.Behavior(is_default_behavior=True)],
+                    s3_origin_source=cloudfront.S3OriginConfig(
+                      s3_bucket_source=mythical_bucket,
+                      origin_access_identity=cloudfront.OriginAccessIdentity(
+                        self,
+                        "spaoai",
+                        comment="SPA CF OAI",
+                      ),
+                    ),
+                ),
+                
+            ],
+            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.ALLOW_ALL,
+            error_configurations=[
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 404,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+              {
+                "errorCachingMinTtl": 0.0,
+                "errorCode": 403,
+                "responseCode": 200,
+                "responsePagePath": "/index.html"
+              },
+            ],
+        )
+            
+        output_cf = core.CfnOutput(
+            self,
+            "mythical_website",
+            export_name="S3WebsiteURL",
+            value=distribution.domain_name,
+        )
+        
+        output_cf = core.CfnOutput(
+            self,
+            "mythical_distribution",
+            export_name="mythicaldistributionoutput",
+            value=distribution.distribution_id,
+        )
+            
+
+ms = MythicalStack(
     app,
     "mythicalstack",
     env=env,
     stack_name="mythicalstack",
+    #role_arn=role_arn,
+)
+
+md = MythicalDistributionStack(
+    app,
+    "mythicaldistributionstack",
+    env=env,
+    stack_name="mythicaldistributionstack",
+    #mythical_bucket=ms.mythical_bucket
     #role_arn=role_arn,
 )
 

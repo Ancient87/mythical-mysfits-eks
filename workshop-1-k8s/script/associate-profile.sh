@@ -18,7 +18,6 @@ profile_name="$(jq < cfn-output.json -r '.ProfileName')"
 
 if aws ec2 associate-iam-instance-profile --iam-instance-profile "Name=$profile_name" --instance-id $instance_id; then
   echo "Profile associated successfully."
-  aws cloud9 update-environment --environment-id
 else
   echo "WARNING: Encountered error associating instance profile with Cloud9 environment"
 fi

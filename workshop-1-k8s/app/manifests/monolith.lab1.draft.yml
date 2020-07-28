@@ -26,7 +26,7 @@ spec:
       containers:
         - name: mysfits-monolith
           #UPDATE REPO AND VERSION HERE
-          image: 125963502549.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-o6pdjzkwqfhs:latest
+          image: YOUR$ECR_MONOLITH:latest
           ports:
             - containerPort: 80
           env:
@@ -34,14 +34,13 @@ spec:
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
           - name: DDB_TABLE_NAME
-            value: mythicalstack-mythicaltable33D867A5-831I9VOG3Y9P
+            value: YOUR$DDB_TABLE_NAME
       # Needed for IAM roles
       securityContext:
         fsGroup: 1337
 ---
 apiVersion: v1
 kind: Service
-
 metadata:
   name: mysfits-service
   namespace: mysfits
@@ -49,7 +48,6 @@ metadata:
     #UPDATE the spec to NLB
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
-  # Update the spec to be of type Loadbalancer
   type: LoadBalancer
   selector:
     app: mysfits

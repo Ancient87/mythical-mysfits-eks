@@ -1,53 +1,49 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mysfits
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysfits
+  name: mysfits-like
   namespace: mysfits
 spec:
   # Change Me to scale
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: mysfits
-      type: monolith
+      type: like
   template:
     metadata:
       labels:
         app: mysfits
-        type: monolith
+        type: like
     spec:
       serviceAccountName: mythical-service-account
       containers:
-        - name: mysfits-monolith
+        - name: mysfits-like
           #UPDATE REPO AND VERSION HERE
-          image: 125963502549.dkr.ecr.ap-southeast-1.amazonaws.com/mythi-monol-o6pdjzkwqfhs:latest
+          image: YOUR$ECR_LIKE:v1
           ports:
             - containerPort: 80
           env:
           #UPDATE REGION AND TABLE HERE!
           - name: AWS_DEFAULT_REGION
             value: ap-southeast-1
-          - name: DDB_TABLE_NAME
-            value: mythicalstack-mythicaltable33D867A5-831I9VOG3Y9P
       # Needed for IAM roles
       securityContext:
         fsGroup: 1337
 ---
 apiVersion: v1
 kind: Service
+
 metadata:
-  name: mysfits-service
-  namespace: mysfits
+  name: mysfits-service-like
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
   type: NodePort
   selector:
     app: mysfits
+    type: like
     
   ports:
     - protocol: TCP

@@ -3,7 +3,7 @@ Monolith to Microservices with Docker and AWS EKS
 
 Welcome to the Mythical Mysfits team!
 
-In this lab, you'll build the monolithic Mythical Mysfits adoption platform with Docker, deploy it on Amazon ECS, and then break it down into a couple of more manageable microservices. Let's get started!
+In this lab, you'll build the monolithic Mythical Mysfits adoption platform with Docker, deploy it on Amazon EKS, and then break it down into a couple of more manageable microservices. Let's get started!
 
 ### Requirements:
 
@@ -17,7 +17,9 @@ These labs are designed to be completed in sequence, and the full set of instruc
 
 * **Workshop Setup:** [Setup working environment on AWS](#lets-begin)
 * **Lab 1:** [Containerize the Mythical Mysfits monolith](#lab-1---containerize-the-mythical-mysfits-adoption-agency-platform)
-
+* **Lab 2:** [Deploy your container using ECR/EKS](#lab-2---deploy-your-container-using-ecreks)
+* **Lab 3:** [Scale the adoption platform monolith with an NLB](#lab-3---scale-the-adoption-platform-monolith-with-an-nlb)
+* **Lab 4:** [Incrementally build and deploy each microservice using EKS](#lab-4-incrementally-build-and-deploy-each-microservice-using-eks)
 
 ### Conventions:
 
@@ -94,12 +96,13 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     In the terminal, change directory to the subdirectory for this workshop in the repo:
 
     ```
-    $ cd amazon-ecs-mythicalmysfits-workshop/workshop-1-eks
+    $ cd mythical-mysfits-eks/workshop-1-k8s
     ```
 
-5.  Setup the credentials in Cloud. Run the below script to associate the instance        role 
+5.  Setup the credentials in Cloud9. Run the below script to associate the instance role 
 
     ```
+    $ export AWS_DEFAULT_REGION=ap-southeast-1
     $ script/associate-profile.sh
     ```
     
@@ -112,16 +115,24 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     Verify that it worked. by running the below. You should see something along the lines of "Arn": arn:aws:sts::ACCOUNT_ID:assumed-role/<i>mysfits-cloud9-C9Role</i>-1F2WMFHBSLUSY/i-0d83a4808c97ef448". If you don't see mysfits-cloud9-C9Role ask for help and do not continue until this step can be completed succesfully.
     
     ```
-    aws sts get-caller identity
+    aws sts get-caller-identity
     ```
 
-6.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 20 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+6. Resize the volume. The default Cloud9 instance comes with 10GB of space. As we are going to be downloading a lot of container images this won't be sufficient. Rune the following command to resize to 20GB
 
-   
-    
+    ```
+    export AWS_DEFAULT_REGION=ap-southeast-1
+    $ script/resize.sh 20
+    ```
+
+7. Prepre the IAC provider
+
+     
     ```
     $ cd cdk
     ```
+    
+    Install the dependency manager and dependencies
     
     ```
     $ sudo pip install poetry
@@ -131,29 +142,53 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     $ poetry install
     ```
     
+    Bootstrap your environment
+    
     ```
     $ poetry run cdk bootstrap
     ```
+
+8. A kick-off deployment of the website <b>Step 8 and 9 are to be done in In parallel</b> This takes about 20 minutes, and we won't need this until Lab 3, so kick it off now in a new terminal and continue the lab. 
     
     ```
-    $ poetry run cdk deploy --require-approval never
+    $ poetry run cdk deploy mythicaldistributionstack --require-approval never
     ```
 
-6. Run some additional automated setup steps with the `setup` script:
+9.  Deploy the cloud development kit (cdk) stack to setup your workshop environment. This step will take about 15 minutes, so it's suggested you do it as soon as possible and perhaps let it running over a break.
+
+    Deploy your EKS environment. Note: This will take ~15 minutes at (65/77) status which is normal and expected. This is the step that sets up your Kubernetes cluster so when you get here it might be a good time to go and take a break. <b>Once step 8 is complete you can move on </b>
+    
+    ```
+    $ poetry run cdk deploy mythicalstack --require-approval never
+    ```
+    
+
+10. Run some additional automated setup steps with the `setup` script:
 
     ```
     $ cd ..
     $ export AWS_DEFAULT_REGION=ap-southeast-1
-    $ script/install_kubectl
-    $ script/setup
+    $ script/install_kubectl.sh
+    $ script/setup.sh
     $ source .environ
     ```
 
     This script will delete some unneeded Docker images to free up disk space, populate a DynamoDB table with some seed data, upload site assets to S3, and install some Docker-related authentication mechanisms that will be discussed later. Make sure you see the "Success!" message when the script completes.
     
     The ```source .environ``` command sets environment vairables for the scripts. Every time you resume the workshop from a longer break you may need to rerun this to provide the right details to commands.
+    
+    Next, please run following command to generate SSH Key in Cloud9. This key will be used later in stateful microservices with EFS lab.
+    ```
+    ssh-keygen
+    ```
+    Press enter 3 times to take the default choices.
+    Upload the public key to your EC2 region:
+    ```
+    aws ec2 import-key-pair --key-name "eksworkshop" --public-key-material file://~/.ssh/id_rsa.pub
+    ```
 
-7. Login to your container repository
+
+11. Login to your container repository
 
     ```
     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_MONOLITH
@@ -166,11 +201,9 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
     ```
 
 ### Checkpoint:
-At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` filee. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+At this point, the Mythical environment will be setup. You can proceed with Lab1
 
-![initial website](images/00-website.png)
-
-[*^ back to top*](#monolith-to-microservices-with-docker-and-aws-fargate)
+[*^ back to top*](#monolith-to-microservices-with-docker-and-aws-eks)
 
 
 ## Lab 1 - Containerize the Mythical Mysfits adoption agency platform
@@ -191,7 +224,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     One of the Mythical Mysfits' developers started working on a Dockerfile in her free time, but she was pulled to a high priority project before she finished.
 
-    In the Cloud9 file tree, navigate to `workshop-1/app/monolith-service`, and double-click on **Dockerfile.draft** to open the file for editing.
+    In the Cloud9 file tree, navigate to `/app/monolith-service`, and double-click on **Dockerfile.draft** to open the file for editing.
 
     *Note: If you would prefer to use the bash shell and a text editor like vi or emacs instead, you're welcome to do so.*
 
@@ -239,7 +272,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     <pre>
     FROM ubuntu:latest
     RUN apt-get update -y
-    RUN apt-get install -y python-pip python-dev build-essential
+    RUN apt-get install -y python3-pip python-dev build-essential
     RUN pip install --upgrade pip
     COPY ./service /MythicalMysfitsService
     WORKDIR /MythicalMysfitsService
@@ -262,7 +295,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
 
     Note: Make sure you're in the right directory when you do this
     <pre>
-    $ docker build -t monolith-service .
+    $ cd app/monolith-service/ && docker build -t monolith-service -f Dockerfile.solved . && cd -
     </pre>
 
     You'll see a bunch of output as Docker builds all layers of the image.  If there is a problem along the way, the build process will fail and stop (red text and warnings along the way are fine as long as the build process does not fail).  Otherwise, you'll see a success message at the end of the build output like this:
@@ -473,9 +506,9 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     Here's sample output from these commands:
     
     <pre>
-    $ docker tag monolith-service:latest 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    $ docker push 873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
-    The push refers to a repository [873896820536.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
+    $ docker tag monolith-service:latest ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    $ docker push ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest
+    The push refers to a repository [ACCOUNT_NUMBER.dkr.ecr.us-east-2.amazonaws.com/mysfit-mono-oa55rnsdnaud:latest]
     0f03d692d842: Pushed
     ddca409d6822: Pushed
     d779004749f3: Pushed
@@ -500,7 +533,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     ![ECR push complete](images/01-ecr-push-complete.png)
 
 ### Checkpoint:
-At this point, you should have a working container for the monolith codebase stored in an ECR repository and ready to deploy with ECS in the next lab.
+At this point, you should have a working container for the monolith codebase stored in an ECR repository and ready to deploy with Kubernetes in the next lab.
 
 [*^ back to the top*](#monolith-to-microservices-with-docker-and-aws-fargate)
 
@@ -517,7 +550,7 @@ A Pod (as in a pod of whales or pea pod) is a group of one or more containers (s
 [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/)
 
 
-![Pods](images/05-pod.svg)
+![Pods](images/01-pod.svg)
 
 </details>
 
@@ -529,40 +562,54 @@ You describe a desired state in a Deployment, and the Deployment Controller chan
 
 [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 
-
-![Pods](images/05-pod.svg)
-
 </details>
 
 Containter definition parameters map to options and arguments passed to the [docker run](https://docs.docker.com/engine/reference/run/) command which means you can describe configurations like which container image(s) you want to use, host:container port mappings, cpu and memory allocations, logging, and more.
 
 In this lab, you will create a pod and deployment definition to serve as a foundation for deploying the containerized adoption platform stored in ECR with Kubernetes. You will be using a managed worker node group in this setup.
 
-EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like task-specific security groups.  Let's get started!
-
-#TODO: Change image for EKS
+EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html), which gives pods the same networking properties of EC2 instances.  Tasks will essentially receive their own [elastic network interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html).  This offers benefits like pod specific security groups.  Let's get started!
 
 ![Lab 2 Architecture](images/02-arch.png)
 
 ### Instructions:
 
+1. Before we get started we will introduce a few helpful troubleshooting commands for Kubernetes. You may find these helpful whilst trying to go through the rest of this lab. Everything after the "#" can be ignored
 
-1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image
+    ```
+    kubectl get endpoints mysfits-service $MM  # See which pods have been selected for a given service. An empty list indicates an issue
+    
+    kubectl logs -l app=mysfits  $MM --follow # See the combined logs from all pods matching the selector. Useful to see what is happening within the application deployed to Kubernetes
+    
+    kubectl describe service/mysfits-service $MM  # 
+    
+    ```
 
-    Locate the monolith.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <code><b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier.
+2. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
+
+    Locate the monolith.lab1.draft.yml file in the app/manifests directory. Take a moment to familiarise yourself with the format and see if you can recognise the sections we discussed above. When you're ready find and locate the  <b><i>CONTAINER IMAGE DEFINITION</i></b> definition and update the image attribute to point at the image you pushed earlier. Also update the <i>DDB_TABLE_NAME</i> variable as this will be passed to the container to know which DynamoDB table to connect to.
     
-    <details>
-    <summary>HINT: Container image definition</summary>
+    ```
+    ...
     
-    Each pod spec 
-    <pre>
-    $ curl http://<b><i>NODE_PUBLIC_IP_ADDRESS:PORT</i></b>/mysfits
-    </pre>
-    
-    </details>
+    containers:
+        - name: mysfits-monolith
+          #UPDATE REPO AND VERSION HERE
+          image: <b>YOUR$ECR_MONOLITH:latest</b>
+          ports:
+            - containerPort: 80
+          env:
+          #UPDATE REGION AND TABLE HERE!
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
+          - name: DDB_TABLE_NAME
+            <b>value: YOUR$DDB_TABLE_NAME</b>
+            
+    ...
+    ```
     
 
-2. Before we can use the Kubernetes cluster we need to setup the kubectl cli     to login to it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and        paste it into your shell appending "--alias mythicalcluster".
+3. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and paste it into your shell:
 
     It may looks comething like this
     <pre>
@@ -584,7 +631,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     ip-10-0-95-74.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
     </pre>
 
-3. Once this is set we can deploy to Kubernetes
+4. Once this is set we can deploy to Kubernetes
     
     The following command apply the manifest definition to Kuberntes.
     The result will be, for now, 1 pod running your container image.
@@ -596,7 +643,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     The second command will let you live observe the status of the pods rolling out.
 
-4. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
+5. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 
     First we need to determine the IP of your task. When using the "Fargate" launch type, each task gets its own ENI and Public/Private IP address. Click on the ID of the task you just launched to go to the detail page for the task. Note down the Public IP address to use with your curl command.
 
@@ -620,7 +667,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     If you set the type field to NodePort, the Kubernetes control plane allocates a port from a range specified by --service-node-port-range flag (default: 30000-32767). Each node proxies that port (the same port number on every Node) into your Service. Your Service reports the allocated port in its .spec.ports[*].nodePort field.
 
     [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport)
-</details>
+    </details>
 
     <details>
     <summary>HINT: curl refresher</summary>
@@ -633,18 +680,16 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
     Uh oh. That didn't work! Why is that? The reason is that we need to manually update the worker node's security group to allow access from the Internet to this port. That doesn't seem ideal and it isn't but don't worry we will address this challenge shortly. For now, go to the EC2 console and update the security group to permit access from your current IP on the high port the service is listening on.
     
-    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port.
+    Navigate to Security Groups in the EC2 console and locate a group with the name <i>eks-cluster-sg-mythical_eks_cluster-XXXXXXXXXXX</i>. Edit the group and add an entry for an inbound rule from your public IP to the high port. <b>N.B: The IP from you Cloud9 desktop will be different than the one you have in your web browser and that is displayed in the console!</b>
     
     ![SecurityGroups](images/02-securitygroup.png)
     
-    Now let's try again.
+    Now let's try again. If the curl command was successful, we are now ready to scale the service
 
-    If the curl command was successful, we are now ready to scale the service
-
-## Lab 3 - Scale the adoption platform monolith with an ALB
+## Lab 3 - Scale the adoption platform monolith with an NLB
 
 
-The Run Task method you used in the last lab is good for testing, but we need to run the adoption platform as a long running process.
+The method you used in the last lab is good for testing, but we need to run the adoption platform as a long running process.
 
 In this lab, you will use an Elastic Load Balancing [Appliction Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/) to distribute incoming requests to your running containers. In addition to simple load balancing, this provieds capabilities like path-based routing to different services.
 
@@ -655,11 +700,24 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
 ### Instructions:
 
-1. Update the monolith service to be of type LoadBalancer:
+1. Finish deploying the website:
+
+    If you recall, earlier we kicked off the deployment of the static Cloudfront site for the Mythical Mysfits. By now that stack should have completed, and we can deploy and refresh our environment variables.
+    
+    ```
+    script/upload-site.sh 
+    ```
+    
+    ### Checkpoint:
+    At this point, the Mythical Mysfits website should be available at the static site endpoint for the Cloudfront distribution. <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. Check that you can view the site, but there won't be much content visible yet until we launch the Mythical Mysfits monolith service:
+    ![initial website](images/00-website.png)
+    
+
+2. Update the monolith service to be of type LoadBalancer:
 
     Update the Task Definition to the revision you created in the previous lab, then click through the rest of the screens and update the service.
     
-    Modify your monolith.yml service as follows
+    Modify your monolith.yml service as follows and take note of the change of type.
     
     ```
     apiVersion: v1
@@ -667,9 +725,9 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
 
     metadata:
         name: mysfits-service
-    annotations:
-        #UPDATE the spec to NLB
-        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        annotations:
+            #UPDATE the spec to NLB
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
     spec:
         # Update the spec to be of type Loadbalancer
         type: LoadBalancer
@@ -687,9 +745,7 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     kubectl apply -f app/manifests/monolith.yml $MM
     ```
     
-    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name.
-    
-    Type the below to see the hostname of your load balancer
+    Something pretty cool is happening now. Kubernetes has integrations with various platform including AWS. What this will now do is get Kubernetes to create a network loadbalancer and to dynamically update the target group to point at the NodePorts of your service on all worker nodes in your cluster. The net result is you can now access the service via the load balancer name. This also solves the security group problem from earlier because now Kubernetes automatically takes care of opening the right ports. Type the below to see the hostname of your load balancer:
     
     ```
     kubectl get service/mysfits-service $MM
@@ -703,6 +759,8 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     mysfits-service   LoadBalancer   172.20.120.184   XXXXX-YYYYY.ap-southeast-1.elb.amazonaws.com   80:31601/TCP   6h2m
     ```
     
+    Wait for your load balancer to become active in the console ![Active ELB](images/03-active.png)
+    
     As before, try and test if this works 
     
     ```
@@ -711,9 +769,9 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     
     If this works we are now ready to fix the website.
 
-4. Fix the website:
-
-    If you recall, visiting the Cloudfront static site for the Mythical Mysfits is currently empty. Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
+4.  Re-upload the website to point at our service.
+    
+    Remember you can access the website at <code>https://$MYTHICAL_WEBSITE</code> where the full name can be found in the `workshop-1/cfn-output.json` file. The reason for this is that the website code needs to communicate with the mysfits service and up to now it wasn't deployed. 
     
     We have provided a script to update the website with the mysfits service load balancer name and to redeploy. Execute this now
     
@@ -741,6 +799,13 @@ What ties this all together is a **Kubernetes Service**, which maps pods belongi
     Like processed.
     10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
     INFO:werkzeug:10.0.94.22 - - [20/Jul/2020 11:39:13] "POST /mysfits/a901bb08-1985-42f5-bb77-27439ac14300/like HTTP/1.1" 200 -
+    ```
+5. (Optional) increase the number of replicas
+
+    Now that you have the load balancer setup you can make use of multiple pods. If you look at your manifest you will see that there is a "replicas: 1" entry. This specifies how many copies of each pod Kubernetes should run. Try changing the value apply the manifest and watch the number of endpoints
+    
+    ```
+    kubectl get endpoints mysfits-service $MM
     ```
 
 <details>
@@ -772,10 +837,9 @@ Here's what you will be implementing:
 
 ![Lab 4](images/04-arch.png)
 
-*Note: The green tasks denote the monolith and the orange tasks denote the "like" microservice
+*Note: The orange pods denote the monolith and the turquoise pods denote the "like" microservice
 
-    
-As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/) to deploy these microservices, but this time we'll walk through all the deployment steps for a fresh service.
+As with the monolith, you'll be using Deployments to deploy these microservices, but this time we'll walk through all the deployment steps for a fresh service.
 
 ### Instructions:
 
@@ -790,144 +854,133 @@ As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/)
     #     return flaskResponse
     ```
 
-    This provides an endpoint that can still manage persistence to DynamoDB, but omits the "business logic" (okay, in this case it's just a print statement, but in real life it could involve permissions checks or other nontrivial processing) handled by the `process_like_request` function.
+    This provides an endpoint that can still manage persistence to DynamoDB, but omits the "business logic" (okay, in this case it's just a print statement, but in real life it could involve permissions checks or other nontrivial processing) handled by the `process_like_request` function. We have provided a fixed version of the code called "mythicalMysfitsServiceLab4.py" for your convenience.
 
-2. With this new functionality added to the monolith, rebuild the monolith docker image with a new tag, such as `nolike`, and push it to ECR just as before (It is a best practice to avoid the `latest` tag, which can be ambiguous. Instead choose a unique, descriptive name, or even better user a Git SHA and/or build ID):
+2. With this new functionality added to the monolith, rebuild the monolith docker image with a new tag, such as `nolike`, and push it to ECR just as before. We have provided a new Dockerfile which points at the modified Monolith code (Dockerfile4.solved). N.B: (It is a best practice to avoid the `latest` tag, which can be ambiguous. Instead choose a unique, descriptive name, or even better user a Git SHA and/or build ID):
 
-    <pre>
+    ```
     $ cd app/monolith-service
-    $ docker build -t monolith-service:nolike .
-    $ docker tag monolith-service:nolike <b><i>ECR_REPOSITORY_URI</i></b>:nolike
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:nolike
-    </pre>
+    $ cd app/monolith-service/ && docker build -t monolith-service:nolike -f Dockerfile4.solved . && cd -
+    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolikev1
+    $ docker push $ECR_MONOLITH:nolikev1
+    ```
 
-3. Now, just as in Lab 2, create a new revision of the monolith Task Definition (this time pointing to the "nolike" version of the container image), AND update the monolith service to use this revision as you did in Lab 3.
+3. Now, build the like service and push it to ECR.
 
-4. Now, build the like service and push it to ECR.
-
-    To find the like-service ECR repo URI, navigate to [Repositories](https://console.aws.amazon.com/ecs/home#/repositories) in the ECS dashboard, and find the repo named like <code><b><i>STACK_NAME</i></b>-like-XXX</code>.  Click on the like-service repository and copy the repository URI.
+    To find the like-service ECR repo URI, check the $ECR_LIKE environment variable.
 
     ![Getting Like Service Repo](images/04-ecr-like.png)
 
     *Note: Your URI will be unique.*
 
-    <pre>
-    $ cd app/like-service
-    $ docker build -t like-service .
-    $ docker tag like-service:latest <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:latest
-    </pre>
+    ```
+    $ cd app/like-service && docker build -t like-service . && cd -
+    $ docker tag like-service:latest $ECR_LIKE:latest
+    $ docker push $ECR_LIKE:latest
+    ```
 
-5. Create a new **Task Definition** for the like service using the image pushed to ECR.
+5. Create a new **Manifest** for the monolith and like deployments and services using the images pushed to ECR.
 
-    Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard. Click on **Create New Task Definition**.
+    The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It makes use of the Kubernetes internal service discovery [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) so no additional environment variables are needed. In Kubernetes by default every service (within a namespace) can be resolved under <i>my-svc.my-namespace.svc.cluster-domain.example</i>. In our case, the like service will find the monolith under http://mysfits-service-no-like
+    
+    Refer to app/manifests/monolith.lab4.draft.yml and like.lab4.draft.yml. As per last time fill in the correct references to your images and DynamoDB tables.
+    
+    Once done copy them to remove "draft" and apply them:
+    
+    ```
+    $ cp app/manifests/monolith.lab4.draft.yml app/manifests/monolith.lab4.yml
+    $ cp app/manifests/like.lab4.draft.yml app/manifests/like.lab4.yml
+    $ kubectl apply -f app/manifests/monolith.lab4.yml $MM  
+    $ kubectl apply -f app/manifests/like.lab4.yml $MM  
+    ```
+    
+    You can test that your services deployed as expected
+    
+    ```
+    $ kubectl get services $MM     
+    $ kubectl get pods $MM
+    ```
+    You should see output as below (original monolith/like service/monolith-no-like)
+    
+    ```
+    NAME                      TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+    mysfits-service           NodePort   172.20.38.243    <none>        80:31873/TCP   22h
+    mysfits-service-like      NodePort   172.20.108.252   <none>        80:32579/TCP   13h
+    mysfits-service-no-like   NodePort   172.20.94.232    <none>        80:32055/TCP   17h
+    
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    mysfits-6f65999f64-4j7gk                1/1     Running   0          128m
+    mysfits-6f65999f64-l8jm6                1/1     Running   0          128m
+    mysfits-like-6685c67684-k6qlq           1/1     Running   0          41m
+    mysfits-like-6685c67684-wjfcn           1/1     Running   0          41m
+    mysfitsmonolithnolike-bdb8dcc57-wdrr4   1/1     Running   0          27m
+    mysfitsmonolithnolike-bdb8dcc57-wsg2x   1/1     Running   0          27m
 
-    Select **Fargate** launch type, and click **Next step**.
+    ```
 
-    Enter a name for your Task Definition, e.g. mysfits-like.
+6. Now we need to expose these services. We will create a Kubernetes Ingress to front the Like Service deployment you just created and associate it with an Ingress. 
+    
+    The Ingress will automagically map an Application Load Balancer to your cluster and the Kubernetes service behind it. [ALB Ingress Controller on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html)
 
-    In the "[Task execution IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)" section, Fargate needs an IAM role to be able to pull container images and log to CloudWatch.  Select the role named like <code><b><i>STACK_NAME</i></b>-EcsServiceRole-XXXXX</code> that was already created for the monolith service.
+    <details>
+    <summary>INFO: What is an Ingress?</summary>
+    
+    Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
 
-    The "[Task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size)" section lets you specify the total cpu and memory used for the task. This is different from the container-specific cpu and memory values, which you will also configure when adding the container definition.
+      internet
+         |
+    [ Ingress ]
+    --|-----|--
+    [ Services ]
 
-    Select **0.5GB** for **Task memory (GB)** and select **0.25vCPU** for **Task CPU (vCPU)**.
+    An Ingress may be configured to give Services externally-reachable URLs, load balance traffic, terminate SSL / TLS, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a load balancer, though it may also configure your edge router or additional frontends to help handle the traffic.
 
-    Your progress should look similar to this:
+    An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type Service.Type=NodePort or Service.Type=LoadBalancer.
+    
+    [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+    
+    ![Pods](images/04-ingress.svg)
+    
+    </details>
+    
+    Deploy the ALB ingress controller. This is provided by AWS so setup ALBs as ingress for Kubernetes.
+    
+    ```
+    $ kubectl apply -f app/manifests/alb-ingress-controller.yml $MM --namespace=kube-system
+    ```
+    
+    Deploy the Mythical mysfits ingress. This will configure the path routing to point at the services. In our case we want the following which is contained in lab4.ingress.yml This will cause like requests to go to our new like service and everything else to the monolith (minus the like service)
+    
+    ```
+    - http:
+        paths:
+          - path: /mysfits/*/like
+            backend: 
+              serviceName: mysfits-service-like
+              servicePort: 80
+          - path: /mysfits*
+            backend:
+              serviceName: mysfits-service-no-like
+              servicePort: 80
+    ```
+    
+    ```
+    $ kubectl apply -f app/manifests/lab4.ingress.yml $MM
+    ```
+    
+    If you are curious, you can look at the ALB in the EC2 console to see what the Ingress controller has done for us. You will see that rules have dynamically been added to the ALB to correspond with the above directives.
+    
+    ![ALB created for you](images/04-alb.png)
+    
+    ![ALB rules created for you](images/04-albrules.png)
+    
+    Redeploy the Mythical mysfits website to use the ingress. This will update the API endpoint in the website to point at the ingress (rather than the NLB from the previous lab).
+    
+    ```
+    $ script/upload-site.sh
+    ```
 
-    ![Fargate Task Definition](images/04-taskdef.png)
-
-    Click **Add container** to associate the like service container with the task.
-
-    Enter values for the following fields:
-
-    * **Container name** - this is a logical identifier, not the name of the container image (e.g. `mysfits-like`).
-    * **Image** - this is a reference to the container image stored in ECR.  The format should be the same value you used to push the like service container to ECR - <pre><b><i>ECR_REPOSITORY_URI</i></b>:latest</pre>
-    * **Port mapping** - set the container port to be `80`.
-
-    Here's an example:
-
-    ![Fargate like service container definition](images/04-containerdef.png)
-
-    *Note: Notice you didn't have to specify the host port because Fargate uses the awsvpc network mode. Depending on the launch type (EC2 or Fargate), some task definition parameters are required and some are optional. You can learn more from our [task definition documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html).*
-
-    The like service code is designed to call an endpoint on the monolith to persist data to DynamoDB. It references an environment variable called `MONOLITH_URL` to know where to send fulfillment.
-
-    Scroll down to the "Advanced container configuration" section, and in the "Environment" section, create an environment variable using `MONOLITH_URL` for the key. For the value, enter the **ALB DNS name** that currently fronts the monolith.
-
-    Here's an example (make sure you enter just the hostname like `alb-mysfits-1892029901.eu-west-1.elb.amazonaws.com` without any "http" or slashes):
-
-    ![monolith env var](images/04-env-var.png)
-
-    Fargate conveniently enables logging to CloudWatch for you.  Keep the default log settings and take note of the **awslogs-group** and the **awslogs-stream-prefix**, so you can find the logs for this task later.
-
-    Here's an example:
-
-    ![Fargate logging](images/04-logging.png)
-
-    Click **Add** to associate the container definition, and click **Create** to create the task definition.
-
-6. Create an ECS service to run the Like Service task definition you just created and associate it with the existing ALB.
-
-    Navigate to the new revision of the Like task definition you just created.  Under the **Actions** drop down, choose **Create Service**.
-
-    Configure the following fields:
-
-    * **Launch type** - select **Fargate**
-    * **Cluster** - select your workshop ECS cluster
-    * **Service name** - enter a name for the service (e.g. `mysfits-like-service`)
-    * **Number of tasks** - enter `1`.
-
-    Here's an example:
-
-    ![ECS Service](images/04-ecs-service-step1.png)
-
-    Leave other settings as defaults and click **Next Step**
-
-    Since the task definition uses awsvpc network mode, you can choose which VPC and subnet(s) to host your tasks.
-
-    For **Cluster VPC**, select your workshop VPC.  And for **Subnets**, select the private subnets; you can identify these based on the tags.
-
-    Leave the default security group which allows inbound port 80.  If you had your own security groups defined in the VPC, you could assign them here.
-
-    Here's an example:
-
-    ![ECS Service VPC](images/04-ecs-service-vpc.png)
-
-    Scroll down to "Load balancing" and select **Application Load Balancer** for *Load balancer type*.
-
-    You'll see a **Load balancer name** drop-down menu appear.  Select the same Mythical Mysfits ALB used for the monolith ECS service.
-
-    In the "Container to load balance" section, select the **Container name : port** combo from the drop-down menu that corresponds to the like service task definition.
-
-    Your progress should look similar to this:
-
-    ![ECS Load Balancing](images/04-ecs-service-alb.png)
-
-    Click **Add to load balancer** to reveal more settings.
-
-    For the **Production listener Port**, select **80:HTTP** from the drop-down.
-
-    For the **Target Group Name**, you'll need to create a new group for the Like containers, so leave it as "create new" and replace the auto-generated value with `mysfits-like`.  This is a friendly name to identify the target group, so any value that relates to the Like microservice will do.
-
-    Change the path pattern to `/mysfits/*/like`.  The ALB uses this path to route traffic to the like service target group.  This is how multiple services are being served from the same ALB listener.  Note the existing default path routes to the monolith target group.
-
-    For **Evaluation order** enter `1`.  Edit the **Health check path** to be `/`.
-
-    And finally, uncheck **Enable service discovery integration**.  While public namespaces are supported, a public zone needs to be configured in Route53 first.  Consider this convenient feature for your own services, and you can read more about [service discovery](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html) in our documentation.
-
-    Your configuration should look similar to this:
-
-    ![Like Service](images/04-ecs-service-alb-detail.png)
-
-    Leave the other fields as defaults and click **Next Step**.
-
-    Skip the Auto Scaling configuration by clicking **Next Step**.
-
-    Click **Create Service** on the Review page.
-
-    Once the Service is created, click **View Service** and you'll see your task definition has been deployed as a service.  It starts out in the **PROVISIONING** state, progresses to the **PENDING** state, and if your configuration is successful, the service will finally enter the **RUNNING** state.  You can see these state changes by periodically click on the refresh button.
-
-7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the CloudWatch logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!
+7. Once the new like service is deployed, test liking a Mysfit again by visiting the website. Check the pod  logs again and make sure that the like service now shows a "Like processed." message. If you see this, you have succesfully factored out like functionality into the new microservice!
 
 8. If you have time, you can now remove the old like endpoint from the monolith now that it is no longer seeing production use.
 
@@ -953,11 +1006,12 @@ As with the monolith, you'll be using [Fargate](https://aws.amazon.com/fargate/)
 
     Use the tag `nolike2` now instead of `nolike`.
 
-    <pre>
-    $ docker build -t monolith-service:nolike2 .
-    $ docker tag monolith-service:nolike2 <b><i>ECR_REPOSITORY_URI</i></b>:nolike2
-    $ docker push <b><i>ECR_REPOSITORY_URI</i></b>:nolike2
-    </pre>
+    ```
+    $ cd app/monolith-service
+    $ cd app/monolith-service/ && docker build -t monolith-service:nolike -f Dockerfile4.solved . && cd -
+    $ docker tag monolith-service:nolike $ECR_MONOLITH:nolikev2
+    $ docker push $ECR_MONOLITH:nolikev2
+    ```
 
     If you look at the monolith repository in ECR, you'll see the pushed image tagged as `nolike2`:
 
@@ -975,6 +1029,10 @@ This is really important because if you leave stuff running in your account, it 
 Delete manually created resources throughout the labs:
 
 * ECR - delete any Docker images pushed to your ECR repository.
-* CloudWatch logs groups
 
-Finally, [delete the CloudFormation stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
+Finally, [delete the CDK stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-delete-stack.html) launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
+
+```
+$ poetry run cdk destroy mythicalstack --require-approval never
+$ poetry run cdk destroy mythicaldistribution --require-approval never
+```

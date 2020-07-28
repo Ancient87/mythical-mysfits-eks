@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "mysfits-ingress"
+  namespace: "mysfits"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+  labels:
+    app: mysfits-ingress
+spec:
+  rules:
+    #- host: glumanda.com
+    - http:
+        paths:
+          - path: /mysfits/*/like
+            backend: 
+              serviceName: mysfits-service-like
+              servicePort: 80
+          - path: /mysfits*
+            backend:
+              serviceName: mysfits-service-no-like
+              servicePort: 80
+          #- path: /mysfits/*
+          #  backend:
+          #    serviceName: mysfits-service-monolith-nolike
+          #    servicePort: 80
+          
