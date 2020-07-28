@@ -573,18 +573,21 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
 
 ![Lab 2 Architecture](images/02-arch.png)
 
-### Instructions:
+
+### Helpful commands:
 
 **For information only** Before we get started we will introduce a few helpful troubleshooting commands for Kubernetes. You may find these helpful whilst trying to go through the rest of this lab. Everything after the "#" can be ignored
 
-    ```
-    kubectl get endpoints mysfits-service $MM  # See which pods have been selected for a given service. An empty list indicates an issue
-    
-    kubectl logs -l app=mysfits  $MM --follow # See the combined logs from all pods matching the selector. Useful to see what is happening within the application deployed to Kubernetes
-    
-    kubectl describe service/mysfits-service $MM  # 
-    
-    ```
+```
+kubectl get endpoints mysfits-service $MM  # See which pods have been selected for a given service. An empty list indicates an issue
+
+kubectl logs -l app=mysfits  $MM --follow # See the combined logs from all pods matching the selector. Useful to see what is happening within the application deployed to Kubernetes
+
+kubectl describe service/mysfits-service $MM  # 
+
+```
+
+### Instructions:
 
 1. Now we can deploy to Kubernetes. The first task is to update the provided manifest to point at your newly created container image.
 
@@ -610,7 +613,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     ```
     
 
-3. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and paste it into your shell:
+2. Before we can use the Kubernetes cluster we need to setup the kubectl cli to work with it. To do so locate the output in your Cloudformation stack      titled mythicalstack.mythicaleksclusterConfigCommand[SOMENUMBERS] and paste it into your shell:
 
     It may looks comething like this
     <pre>
@@ -632,7 +635,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     ip-10-0-95-74.ap-southeast-1.compute.internal   Ready    <none>   6h19m       v1.16.8-eks-fd1ea7
     </pre>
 
-4. Once this is set we can deploy to Kubernetes
+3. Once this is set we can deploy to Kubernetes
     
     The following command apply the manifest definition to Kuberntes.
     The result will be, for now, 1 pod running your container image.
@@ -644,7 +647,7 @@ EKS launches pods with a networking mode called [vpc-cni](https://docs.aws.amazo
     
     The second command will let you live observe the status of the pods rolling out.
 
-5. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
+4. The deployment has produced a pod as expected. Now lets try and connect to it. To do so we need to expose the pod.
 
     First we need to determine the IP of your task. When using the "Fargate" launch type, each task gets its own ENI and Public/Private IP address. Click on the ID of the task you just launched to go to the detail page for the task. Note down the Public IP address to use with your curl command.
 
