@@ -105,20 +105,6 @@ class MythicalStack(core.Stack):
             f"mythicalclustervpc",
         )
         
-        mythical_environment_vpc = ec2.Vpc(
-            self,
-            f"mythicalenvironmentvpc",
-        )
-        
-        ######## Cloud9 ########
-        
-        #mythical_environment = cloud9.Ec2Environment(
-        #    self,
-        #    "mythical_environment",
-        #    vpc=mythical_environment_vpc,
-        #    ec2_environment_name="mythical_environment",
-        #)
-        
         ######## EKS Cluster ########
         
         
