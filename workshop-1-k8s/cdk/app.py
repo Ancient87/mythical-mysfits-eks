@@ -146,6 +146,8 @@ class MythicalStack(core.Stack):
             version=eks.KubernetesVersion.V1_16,
         )
         
+        
+        
         cluster_role = mythical_eks_cluster.role
         
         cluster_role.add_to_policy(
@@ -207,13 +209,15 @@ class MythicalStack(core.Stack):
         
         mythical_eks_nodegroup = eks.Nodegroup(
             self,
-            "mythicaleksnode",
+            "mythicaleksnodegroup",
             cluster=mythical_eks_cluster,
-            desired_size=2,
+            desired_size=3,
             subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),
         )
+        
+        
         
         worker_node_role = mythical_eks_nodegroup.role
         
@@ -222,8 +226,6 @@ class MythicalStack(core.Stack):
                 "AmazonElasticFileSystemFullAccess"
             )
         )
-        
-        
         
         mythical_eks_cluster_role = mythical_eks_cluster.role
     

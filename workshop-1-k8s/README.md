@@ -488,7 +488,7 @@ The Mythical Mysfits adoption agency infrastructure has always been running dire
     51aba5103ab9df25c08c18e9cecf540592dcc67d3393ad192ebeda6e872f8e7a
     $ docker ps
     CONTAINER ID        IMAGE                           COMMAND                  CREATED             STATUS              PORTS                  NAMES
-    51aba5103ab9        monolith-service:latest         "python mythicalMysf…"   24 seconds ago      Up 23 seconds       0.0.0.0:8000->80/tcp   awesome_varahamihira
+    51aba5103ab9        monolith-service:latest         "python3 mythicalMysf…"   24 seconds ago      Up 23 seconds       0.0.0.0:8000->80/tcp   awesome_varahamihira
     $ curl localhost:8000/mysfits
     {"mysfits": [...]}
     $ docker logs 51a
